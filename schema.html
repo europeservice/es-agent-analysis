@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Europe Service — Повна схема діалогу AI-агента</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #EEF2F7; font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }
+
+.header { background: linear-gradient(135deg, #1a3a6e 0%, #1a56db 100%); color: #fff; border-radius: 14px; padding: 24px 32px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(26,58,110,.3); }
+.header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.header p { font-size: 13px; opacity: .85; }
+.header-meta { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.badge { background: rgba(255,255,255,.18); border-radius: 20px; padding: 3px 12px; font-size: 12px; }
+.back-link { background: rgba(255,255,255,.9); color: #1a3a6e; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; text-decoration: none; margin-left: auto; }
+.back-link:hover { background: white; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px; background: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+.legend-title { width: 100%; font-weight: 700; font-size: 12px; color: #444; margin-bottom: 2px; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #333; padding: 3px 8px; border-radius: 14px; border: 1px solid #e0e0e0; background: #fafafa; }
+.dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab { padding: 8px 18px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.tab.active { background: #1a56db; color: #fff; box-shadow: 0 3px 10px rgba(26,86,219,.3); }
+.tab.inactive { background: #fff; color: #555; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.tab:hover:not(.active) { background: #e3eaf7; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.diagram-wrap { background: #fff; border-radius: 14px; padding: 20px; overflow: auto; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.zoom-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.zoom-btn { background: #fff; border: 1px solid #ddd; border-radius: 6px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.zoom-btn:hover { background: #e8f0fe; }
+.zoom-label { font-size: 12px; color: #666; min-width: 40px; text-align: center; }
+.diagram-scroller { overflow: auto; cursor: grab; user-select: none; }
+.diagram-scroller:active { cursor: grabbing; }
+.diagram-inner { transform-origin: top left; transition: transform .15s; }
+.mermaid svg { max-width: none !important; }
+
+/* NS cards */
+.ns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 4px; }
+@media(max-width:900px){ .ns-grid { grid-template-columns: 1fr; } }
+.ns-card { border-radius: 12px; border: 2px solid #e0e0e0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.ns-card-header { padding: 10px 14px; font-weight: 700; font-size: 13px; color: #fff; }
+.ns-card-body { padding: 14px; background: #fff; }
+.ns-step { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+.ns-step:last-child { margin-bottom: 0; }
+.ns-step-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+.ns-step-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #888; margin-bottom: 2px; }
+.ns-step-text { font-size: 12px; color: #333; line-height: 1.45; }
+.ns-branch { margin-left: 40px; margin-top: 6px; margin-bottom: 6px; border-left: 2px dashed #e0e0e0; padding-left: 10px; }
+.ns-branch-row { display: flex; gap: 6px; margin-bottom: 5px; align-items: flex-start; }
+.ns-branch-label { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; margin-top: 1px; }
+.ns-branch-text { font-size: 11px; color: #555; line-height: 1.4; }
+.tag-pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-top: 3px; }
+.card-field { font-size: 12px; color: #333; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,.07); }
+.card-field:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤖 Europe Service — Повна схема діалогу AI-агента</h1>
+  <p>Від першого повідомлення до підтвердження оплати · Усі гілки · Нестандартні ситуації</p>
+  <div class="header-meta">
+    <span class="badge">9 етапів</span>
+    <span class="badge">Повний діалог</span>
+    <span class="badge">Гілки по відповідях</span>
+    <span class="badge">HOT / WARM / COLD</span>
+    <a href="prompt.html" class="back-link">← Промпт</a>
+    <a href="index.html" class="back-link">← Аналіз</a>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-title">Позначення:</div>
+  <div class="leg"><div class="dot" style="background:#1565C0"></div> Повідомлення агента</div>
+  <div class="leg"><div class="dot" style="background:#F57F17;border-radius:50%"></div> Рішення / розгалуження</div>
+  <div class="leg"><div class="dot" style="background:#2E7D32"></div> Позитивний результат</div>
+  <div class="leg"><div class="dot" style="background:#B71C1C"></div> 🔴 ГАРЯЧИЙ</div>
+  <div class="leg"><div class="dot" style="background:#F9A825"></div> 🟡 ТЕПЛИЙ</div>
+  <div class="leg"><div class="dot" style="background:#546E7A"></div> 🔵 ХОЛОДНИЙ</div>
+  <div class="leg"><div class="dot" style="background:#E65100"></div> Тег / мітка</div>
+  <div class="leg"><div class="dot" style="background:#1A237E"></div> Фінальний крок</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active"   onclick="showTab('phase1')">Фаза 1 — Старт і Кваліфікація</button>
+  <button class="tab inactive" onclick="showTab('phase2')">Фаза 2 — Вакансії і Закриття</button>
+  <button class="tab inactive" onclick="showTab('ns')">Нестандартні ситуації</button>
+  <button class="tab inactive" onclick="showTab('card')">Картка кандидата</button>
+</div>
+
+<!-- ═══ PHASE 1 ═══ -->
+<div class="panel active" id="panel-phase1">
+  <div class="diagram-wrap">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom('phase1',-0.15)">&#8722;</button>
+      <span class="zoom-label" id="zoom-label-phase1">100%</span>
+      <button class="zoom-btn" onclick="zoom('phase1',+0.15)">+</button>
+      <button class="zoom-btn" onclick="resetZoom('phase1')" title="Reset">&#8857;</button>
+      <span style="font-size:11px;color:#888;margin-left:8px">Затисніть і тягніть для переміщення</span>
+    </div>
+    <div class="diagram-scroller" id="scroller-phase1">
+      <div class="diagram-inner" id="inner-phase1">
+        <div class="mermaid">
+flowchart TD
+    START(["📱 Кандидат написав першим\nабо агент ініціює контакт"])
+    style START fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    START --> G1["🤖 ПРИВІТАННЯ:\n«Доброго дня! Мене звати [ім'я],\nменеджер компанії Europe Service.\nВи залишили заявку на\nпрацевлаштування за кордоном.\nПідкажіть, для вас ще\nактуальний пошук?»"]
+    style G1 fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    G1 --> G1Q{"Актуально?"}
+    style G1Q fill:#F57F17,color:#fff,stroke:#E65100
+
+    G1Q -- "Так / підтвердив" --> G2
+    G1Q -- "Ні / не залишав" --> G1NO["«Вибачте за турбування.\nЯкщо колись буде актуально —\nзвертайтесь 🙂»\nТег: НЕЦІЛЬОВИЙ"]
+    style G1NO fill:#546E7A,color:#fff,stroke:#455A64
+    G1Q -- "Мовчить 24 год" --> RM1["Нагадування 1:\n«Чи актуальний для вас\nпошук роботи?»"]
+    style RM1 fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    RM1 --> RM1Q{"Відповів?"}
+    style RM1Q fill:#F57F17,color:#fff,stroke:#E65100
+    RM1Q -- "Так" --> G2
+    RM1Q -- "Мовчить ще 48 год" --> RM2["Нагадування 2:\n«Я підбирав для вас варіанти —\nчи ще розглядаєте виїзд?»"]
+    style RM2 fill:#1565C0,color:#fff,stroke:#0D47A1
+    RM2 --> RM2Q{"Відповів?"}
+    style RM2Q fill:#F57F17,color:#fff,stroke:#E65100
+    RM2Q -- "Так" --> G2
+    RM2Q -- "Мовчить" --> RM3["Нагадування 3:\n«Якщо актуально —\nнапишіть, і я продовжу підбір 🙂»"]
+    style RM3 fill:#1565C0,color:#fff,stroke:#0D47A1
+    RM3 --> INACT(["Тег: НЕАКТИВНИЙ\nЗавершити діалог"])
+    style INACT fill:#546E7A,color:#fff,stroke:#455A64
+
+    G2["«Підкажіть, будь ласка,\nяк я можу до вас звертатись?»"]
+    style G2 fill:#1565C0,color:#fff,stroke:#0D47A1
+    G2 --> GOTNAME["Отримали ім'я ✓"]
+    style GOTNAME fill:#1B5E20,color:#fff,stroke:#1B5E20
+
+    GOTNAME --> AGENDA["📋 МІНІ-АДЖЕНДА:\n«[Ім'я], щоб я не радив абищо,\nдавайте я поставлю кілька\nкоротких питань і після цього\nпідберу підходящі варіанти. Добре?»"]
+    style AGENDA fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    AGENDA --> AGENDQ{"Погодився?"}
+    style AGENDQ fill:#F57F17,color:#fff,stroke:#E65100
+    AGENDQ -- "Так / мовчазна згода" --> QW
+    AGENDQ -- "Хоче одразу вакансії" --> VACSOON["«Чудово, що цікавлять деталі!\nСаме для цього хочу спочатку\nпоставити кілька уточнень —\nщоб ви отримали максимально\nпідходящі варіанти. Добре?»"]
+    style VACSOON fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACSOON --> VACSOONQ{"Погодився?"}
+    style VACSOONQ fill:#F57F17,color:#fff,stroke:#E65100
+    VACSOONQ -- "Так" --> QW
+    VACSOONQ -- "Ні, хоче зараз" --> ESCALATE_EARLY(["Ескалація менеджеру:\nклієнт хоче вакансії одразу"])
+    style ESCALATE_EARLY fill:#B71C1C,color:#fff,stroke:#7F0000
+
+    QW{"Для кого\nшукаємо роботу?"}
+    style QW fill:#F57F17,color:#fff,stroke:#E65100
+
+    QW -- "Тільки для себе" --> QAGE
+    QW -- "Для себе + інші" --> MULTI["«Уточніть, будь ласка —\nхто ще їде з вами?\n(ім'я, вік, ким доводиться)»"]
+    style MULTI fill:#1565C0,color:#fff,stroke:#0D47A1
+    MULTI --> QAGE
+
+    QAGE["«Скільки вам років?»\n(+ кожному учаснику якщо груп.)"]
+    style QAGE fill:#1565C0,color:#fff,stroke:#0D47A1
+    QAGE --> QCURRENTLOC["«В якій країні і місті\nви зараз знаходитесь?»"]
+    style QCURRENTLOC fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QCURRENTLOC --> QVAC{"Яка вакансія\nз заявки?"}
+    style QVAC fill:#F57F17,color:#fff,stroke:#E65100
+
+    QVAC -- "Активна конкретна" --> QOPEN
+    QVAC -- "Призупинена / неактивна" --> VINACT["«Якщо говорити саме про цю\nвакансію — зараз набір призупинено.\nАле я без проблем підберу\nаналогічні або кращі варіанти.»"]
+    style VINACT fill:#1565C0,color:#fff,stroke:#0D47A1
+    VINACT --> QOPEN
+    QVAC -- "Невідома / заявка загальна" --> VSPHERE["«Яку роботу або сферу\nви розглядаєте?»"]
+    style VSPHERE fill:#1565C0,color:#fff,stroke:#0D47A1
+    VSPHERE --> QEXP
+
+    QOPEN{"Відкриті до\nінших варіантів?"}
+    style QOPEN fill:#F57F17,color:#fff,stroke:#E65100
+    QOPEN -- "Так, відкритий" --> QEXP
+    QOPEN -- "Тільки ця вакансія" --> TONLY["Тег: ТІЛЬКИ ЦЯ\n«Зрозумів. Тоді тримаємо в фокусі,\nале покажу 1-2 для порівняння.»"]
+    style TONLY fill:#E65100,color:#fff,stroke:#BF360C
+    TONLY --> QEXP
+
+    QEXP{"Досвід роботи\nза кордоном?"}
+    style QEXP fill:#F57F17,color:#fff,stroke:#E65100
+    QEXP -- "Так, був досвід" --> EXPYES["«Де саме працювали,\nким і в якій сфері?»"]
+    style EXPYES fill:#1565C0,color:#fff,stroke:#0D47A1
+    QEXP -- "Ні, вперше" --> EXPNO["«Добре. А ким раніше\nпрацювали в Україні,\nв якій сфері?»"]
+    style EXPNO fill:#1565C0,color:#fff,stroke:#0D47A1
+    EXPYES --> EXPSAME
+    EXPNO --> EXPSAME
+
+    EXPSAME{"Розглядає ту ж\nсферу чи відкритий\nдо інших?"}
+    style EXPSAME fill:#F57F17,color:#fff,stroke:#E65100
+    EXPSAME -- "Та сама сфера" --> QLOC
+    EXPSAME -- "Відкритий до інших" --> QLOC
+
+    QLOC{"Бажана країна\nабо місто?"}
+    style QLOC fill:#F57F17,color:#fff,stroke:#E65100
+    QLOC -- "Відкритий до варіантів" --> QHOUSING
+    QLOC -- "Конкретна країна / місто" --> LWHY["«Скажіть, а чому\nсаме [назва]?»"]
+    style LWHY fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    LWHY --> LREASON{"Причина\nобʼєктивна?"}
+    style LREASON fill:#F57F17,color:#fff,stroke:#E65100
+    LREASON -- "Так\n(родина, документи,\nзнайомі, статус)" --> LSUP["«Це логічно, розумію.\nБудемо відштовхуватись від цього,\nале якщо побачу сильніший\nваріант — теж підкажу.»"]
+    style LSUP fill:#1565C0,color:#fff,stroke:#0D47A1
+    LREASON -- "Слабка або емоційна\n(«подобається», «чув щось»)" --> LADV["«Розумію. Інколи люди звужують\nсобі вибір і пропускають кращі\nваріанти. Я покажу 1-2\nальтернативи для порівняння.»"]
+    style LADV fill:#1565C0,color:#fff,stroke:#0D47A1
+    LSUP --> QHOUSING
+    LADV --> QHOUSING
+
+    QHOUSING["«Чи потрібне вам\nпроживання від\nроботодавця?»"]
+    style QHOUSING fill:#1565C0,color:#fff,stroke:#0D47A1
+    QHOUSING --> QWORKTYPE["«Який характер роботи\nрозглядаєте — склад, виробництво,\nсервіс, інше?»"]
+    style QWORKTYPE fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QWORKTYPE --> QPASS{"Є закордонний\nпаспорт?"}
+    style QPASS fill:#F57F17,color:#fff,stroke:#E65100
+    QPASS -- "Так, є" --> QBORDER
+    QPASS -- "Немає / оформлюється" --> PTAG["Тег: НЕМАЄ ПАСПОРТУ\n«Зрозумів. Давайте зафіксуємо\nваш профіль — і я підберу\nваріанти на той час,\nколи будете готові.»"]
+    style PTAG fill:#E65100,color:#fff,stroke:#BF360C
+    PTAG --> QBORDER
+
+    QBORDER["«Чи були ви\nза кордоном після\n24 лютого 2022 року?»"]
+    style QBORDER fill:#1565C0,color:#fff,stroke:#0D47A1
+    QBORDER --> QSTATUS["«Є статус захисту\nв якійсь країні ЄС?\n(якщо актуально)»"]
+    style QSTATUS fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QSTATUS --> QREADY{"Коли плануєте\nїхати?"}
+    style QREADY fill:#F57F17,color:#fff,stroke:#E65100
+
+    QREADY -- "Негайно /\nдо 2 тижнів" --> HOT(["🔴 ГАРЯЧИЙ\nМенеджер за 1 годину"])
+    style HOT fill:#B71C1C,color:#fff,stroke:#7F0000
+
+    QREADY -- "Через місяць\nі більше" --> QTERM
+    QREADY -- "Не вирішив" --> QTERM
+
+    QTERM["«А чому саме такий термін?\nЯкщо зʼявиться дійсно\nгарна вакансія — розглянули б\nвиїзд трохи раніше?»"]
+    style QTERM fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QTERM -- "Так, термін\nне принциповий" --> WARM(["🟡 ТЕПЛИЙ / ГНУЧКИЙ ТЕРМІН\nМенеджер за 3 год"])
+    style WARM fill:#F9A825,color:#fff,stroke:#F57F17
+
+    QTERM -- "Ні, принципово\nне раніше" --> COLD(["🔵 ХОЛОДНИЙ\nМенеджер протягом дня"])
+    style COLD fill:#546E7A,color:#fff,stroke:#455A64
+
+    HOT --> QLANG
+    WARM --> QLANG
+    COLD --> QLANG
+
+    QLANG["«Які іноземні мови знаєте?\nПольська, англійська?»"]
+    style QLANG fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QLANG --> QCOMPETITOR{"Зверталися\nще кудись?"}
+    style QCOMPETITOR fill:#F57F17,color:#fff,stroke:#E65100
+
+    QCOMPETITOR -- "Ні, ви перші" --> COMPNO["«Чудово. Моя задача —\nдати вам максимально\nзрозумілу картину.»"]
+    style COMPNO fill:#1565C0,color:#fff,stroke:#0D47A1
+    QCOMPETITOR -- "Так, зверталися" --> COMPYES["«Зрозумів, це нормально.\nТоді я дам більш точну\nкартину для порівняння.»"]
+    style COMPYES fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    COMPNO --> QVIBER
+    COMPYES --> QVIBER
+
+    QVIBER["«Вайбер у вас\nє на цьому номері?»"]
+    style QVIBER fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    QVIBER --> P2(["➡ ФАЗА 2:\nПрезентація + Вакансії"])
+    style P2 fill:#1A237E,color:#fff,stroke:#0D47A1
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 2 ═══ -->
+<div class="panel" id="panel-phase2">
+  <div class="diagram-wrap">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom('phase2',-0.15)">&#8722;</button>
+      <span class="zoom-label" id="zoom-label-phase2">100%</span>
+      <button class="zoom-btn" onclick="zoom('phase2',+0.15)">+</button>
+      <button class="zoom-btn" onclick="resetZoom('phase2')" title="Reset">&#8857;</button>
+    </div>
+    <div class="diagram-scroller" id="scroller-phase2">
+      <div class="diagram-inner" id="inner-phase2">
+        <div class="mermaid">
+flowchart TD
+    P2S(["⬅ ФАЗА 1 завершена\nПортрет клієнта зібрано"])
+    style P2S fill:#1A237E,color:#fff,stroke:#0D47A1
+
+    P2S --> COMP["🏢 ПРЕЗЕНТАЦІЯ КОМПАНІЇ:\n«Наша задача — не просто дати вакансію.\nВи поїдете на зрозумілі умови,\nзнатимете всі етапи і не залишитесь\nодні після виїзду.»\n+\n6 років, 45 000 клієнтів, 10 країн,\nAmazon/BMW/H&M, ліцензія МСП №223,\nпідтримка 24/7, гарантія заміни"]
+    style COMP fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    COMP --> COMPPERS{"Тип клієнта\nдля персоналізації"}
+    style COMPPERS fill:#F57F17,color:#fff,stroke:#E65100
+
+    COMPPERS -- "Вперше їде" --> COMP1["«У вашій ситуації це важливо —\nперший виїзд завжди багато\nпитань і нюансів.»"]
+    style COMP1 fill:#1565C0,color:#fff,stroke:#0D47A1
+    COMPPERS -- "Їде з кимось" --> COMP2["«Для вас це важливо, бо вас\nдвоє — треба все узгодити\nі не залишити нікого наодинці.»"]
+    style COMP2 fill:#1565C0,color:#fff,stroke:#0D47A1
+    COMPPERS -- "Конкретна країна" --> COMP3["«Важливо, що ми маємо\nперевірені вакансії саме\nв [країна] з нормальними умовами.»"]
+    style COMP3 fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    COMP1 --> VACSEL
+    COMP2 --> VACSEL
+    COMP3 --> VACSEL
+
+    VACSEL["💼 ПІДБІР 2–3 ВАКАНСІЙ\n«Враховуючи все, що ви написали,\nбачу для вас зараз 2 хороших варіанти.»\n\nКартка кожної:\n🏭 Назва + місто + країна\n💵 Зарплата: X zł/год нетто\n📈 Графік і кількість годин\n👤 Для кого (стать, вік)\n🏠 Проживання: вартість або безкоштовно\n📅 Заїзди: дата — залишилось X місць"]
+    style VACSEL fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    VACSEL --> VACRESP{"Реакція\nна вакансії"}
+    style VACRESP fill:#F57F17,color:#fff,stroke:#E65100
+
+    VACRESP -- "Цікаво! Підходить" --> DOCREQ
+    VACRESP -- "Хочу подумати" --> OBJ1["«Звісно, це нормально.\nПідкажіть тільки — що саме\nвас зараз стримує?»"]
+    style OBJ1 fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACRESP -- "Дорого / не готовий платити" --> OBJ2["«Розумію. Тут питання не просто\nв оплаті, а щоб не поїхати\nна невдалий варіант.\nПоясню що саме входить.»"]
+    style OBJ2 fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACRESP -- "Скиньте всі вакансії" --> OBJ3["«Можу скинути багато, але\nтоді це буде хаос.\nКраще 2-3 точні саме під вас.»"]
+    style OBJ3 fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACRESP -- "Тільки ця країна" --> OBJ4["«Розумію. Чому саме вона?\nХочу або підтвердити ваш вибір,\nабо показати сильніший варіант.»"]
+    style OBJ4 fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACRESP -- "Вже звертались в інші" --> OBJ5["«Це нормально. Моя задача —\nдати більш точну картину\nдля порівняння.»"]
+    style OBJ5 fill:#1565C0,color:#fff,stroke:#0D47A1
+    VACRESP -- "Немає паспорту" --> OBJ6["«Зрозумів. Зафіксую ваш профіль\nі підберу варіанти на той час,\nколи будете готові.»"]
+    style OBJ6 fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    OBJ1 --> OBJCLOSE{"Заперечення\nзакрито?"}
+    style OBJCLOSE fill:#F57F17,color:#fff,stroke:#E65100
+    OBJ2 --> OBJCLOSE
+    OBJ3 --> OBJCLOSE
+    OBJ4 --> OBJCLOSE
+    OBJ5 --> OBJCLOSE
+    OBJ6 --> OBJCLOSE
+
+    OBJCLOSE -- "Так, клієнт готовий" --> DOCREQ
+    OBJCLOSE -- "Ні, ще сумнівається" --> DEFICIT["М'який дефіцит:\n«По хороших вакансіях\nмісця зазвичай довго не стоять.\nЯкщо підходить —\nкраще не затягувати.»"]
+    style DEFICIT fill:#1565C0,color:#fff,stroke:#0D47A1
+    DEFICIT --> DEFQ{"Рішення\nпісля дефіциту"}
+    style DEFQ fill:#F57F17,color:#fff,stroke:#E65100
+    DEFQ -- "Готовий рухатись" --> DOCREQ
+    DEFQ -- "Ще думає" --> NEXTCONTACT["Фіксуємо наступний\nконтакт: конкретна дата\nі час «Я напишу вам\nв [день] о [час]»"]
+    style NEXTCONTACT fill:#1565C0,color:#fff,stroke:#0D47A1
+    NEXTCONTACT --> NEXTCQ{"Наступний\nконтакт відбувся?"}
+    style NEXTCQ fill:#F57F17,color:#fff,stroke:#E65100
+    NEXTCQ -- "Так" --> VACSEL
+    NEXTCQ -- "Ні, мовчить" --> INACT2(["Тег: НЕАКТИВНИЙ"])
+    style INACT2 fill:#546E7A,color:#fff,stroke:#455A64
+
+    DOCREQ["📸 ЗБІР ДОКУМЕНТІВ:\n«Для перевірки роботодавцем потрібно:\n— перша сторінка закордонного паспорта\n— сторінка зі штампами в'їзд/виїзд\nФото у РОЗГОРНУТОМУ вигляді,\nбез обрізань, без пальців,\nна білому фоні.\nЯкщо штампів немає — стор. 1 і 6-7»"]
+    style DOCREQ fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    DOCREQ --> DOCSENT{"Клієнт надіслав\nдокументи?"}
+    style DOCSENT fill:#F57F17,color:#fff,stroke:#E65100
+    DOCSENT -- "Так, надіслав" --> DOCCHECK["«Дякую! Надсилаю\nна перевірку роботодавцю.»\n[пауза]"]
+    style DOCCHECK fill:#1565C0,color:#fff,stroke:#0D47A1
+    DOCSENT -- "Не має паспорту\nзараз" --> DOCNOW["«Добре, як зʼявиться —\nнадішліть. Поки що\nзафіксую ваш профіль.»"]
+    style DOCNOW fill:#1565C0,color:#fff,stroke:#0D47A1
+    DOCNOW --> NEXTCONTACT
+
+    DOCCHECK --> APPROVED["✅ «[Ім'я], роботодавець\nвас погодив! 🎉»"]
+    style APPROVED fill:#1B5E20,color:#fff,stroke:#1B5E20
+
+    APPROVED --> PACKAGE["📦 ПРЕЗЕНТАЦІЯ ПАКЕТУ:\n«Оформлення відбувається\nза пакетом послуг.»\n[надіслати фото/картку пакетів]\n\nПакет = юридичне оформлення +\nпідготовка документів +\nкоординація + підтримка +\nгарантія заміни в договорі"]
+    style PACKAGE fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    PACKAGE --> PAYTYPE{"Спосіб оплати?"}
+    style PAYTYPE fill:#F57F17,color:#fff,stroke:#E65100
+
+    PAYTYPE -- "На рахунок ФОП" --> PAYFOP["Надсилаємо реквізити:\nОтримувач: ФОП [ім'я]\nIBAN: UA...\nПризначення: консультаційні послуги"]
+    style PAYFOP fill:#1565C0,color:#fff,stroke:#0D47A1
+    PAYTYPE -- "За посиланням" --> PAYLINK["Надсилаємо посилання\nна оплату"]
+    style PAYLINK fill:#1565C0,color:#fff,stroke:#0D47A1
+    PAYTYPE -- "Питає чому треба платити" --> PAYWHY["«Пакет включає: юридичне\nоформлення, документи,\nкоординація і підтримка.\nПлюс гарантія заміни\nвакансії в договорі.»"]
+    style PAYWHY fill:#1565C0,color:#fff,stroke:#0D47A1
+    PAYWHY --> PAYTYPE
+
+    PAYFOP --> PAYCONF
+    PAYLINK --> PAYCONF
+
+    PAYCONF{"Клієнт надіслав\nпідтвердження\nоплати?"}
+    style PAYCONF fill:#F57F17,color:#fff,stroke:#E65100
+    PAYCONF -- "Так, є скріншот" --> PAIDOK["✅ «Підтверджую оплату —\nвсе зараховано!»"]
+    style PAIDOK fill:#1B5E20,color:#fff,stroke:#1B5E20
+    PAYCONF -- "Мовчить / зволікає" --> PAYREMIND["«[Ім'я], чи вдалось\nоформити оплату?\nЯкщо є питання —\nз радістю допоможу.»"]
+    style PAYREMIND fill:#1565C0,color:#fff,stroke:#0D47A1
+    PAYREMIND --> PAYCONF
+
+    PAIDOK --> FINAL["🎯 ФІНАЛІЗАЦІЯ:\n1️⃣ Заповнення анкети-форми клієнтом\n2️⃣ Підтвердження дати виїзду\n3️⃣ «З вами зв'яжеться [ім'я координатора]\n— він надасть всю інформацію по виїзду»\n4️⃣ Інструкції: «Візьміть постіль,\nтарілку, чашку, виделку, ложку 🙂»\n5️⃣ «Бажаємо вдалого виїзду\nі гарної роботи! 😊»"]
+    style FINAL fill:#1565C0,color:#fff,stroke:#0D47A1
+
+    FINAL --> DONE(["✅ КЛІЄНТ ОФОРМЛЕНИЙ\nКартка → Bitrix24\nКоординатор отримує профіль"])
+    style DONE fill:#004D40,color:#fff,stroke:#00251A
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NON-STANDARD ═══ -->
+<div class="panel" id="panel-ns">
+  <div class="diagram-wrap" style="padding:24px">
+    <h2 style="color:#1a56db;font-size:16px;margin-bottom:6px">Нестандартні ситуації</h2>
+    <p style="color:#777;font-size:13px;margin-bottom:20px">Як агент поводиться в кожному нетиповому випадку</p>
+    <div class="ns-grid">
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#E65100">⚡ Одразу питає про вакансії</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#FBE9E7;color:#E65100">📩</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Кандидат</div>
+              <div class="ns-step-text">«Які вакансії є? Скільки платять?» — до початку кваліфікації</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Агент відповідає</div>
+              <div class="ns-step-text">«Чудово, що цікавлять деталі! Саме для цього хочу спочатку поставити кілька уточнень — щоб ви отримали максимально підходящі варіанти. Добре?»</div>
+            </div>
+          </div>
+          <div class="ns-branch">
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#1B5E20;color:#fff">ТАК</span><div class="ns-branch-text">Повертаємось до кваліфікації</div></div>
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#C62828;color:#fff">НІ</span><div class="ns-branch-text">«Розумію! Одразу передаю менеджеру — він відповість детально.» → Ескалація</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#C62828">😡 Агресивний клієнт</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#FFEBEE;color:#C62828">😤</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Кандидат</div>
+              <div class="ns-step-text">Грубить, злиться, незадоволений ходом розмови</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Агент відповідає</div>
+              <div class="ns-step-text">«Розумію вас, вибачте за незручності. Одразу передаю ваш запит менеджеру — він зв'яжеться найближчим часом!»</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#FFF3E0;color:#E65100">🏷</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Дія</div>
+              <span class="tag-pill" style="background:#C62828;color:#fff">СКЛАДНИЙ КЛІЄНТ</span>
+              <div class="ns-step-text" style="margin-top:4px">Пріоритетна ескалація до менеджера</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#6A1B9A">🚫 Кандидат не підходить</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#F3E5F5;color:#6A1B9A">❌</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Виявлено блокер</div>
+              <div class="ns-step-text">Вік менше 18 або понад 55, немає документів, або інший критичний фактор</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Агент відповідає</div>
+              <div class="ns-step-text">«Дякую за відкритість! Деякі деталі варто обговорити зі спеціалістом — він підкаже найкращий шлях у вашій ситуації.»</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#FFF8E1;color:#F57F17">⚠</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Важливо!</div>
+              <div class="ns-step-text">Агент <strong>НЕ відмовляє</strong> самостійно. Рішення — тільки менеджер.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#546E7A">⌛ Мовчить у процесі</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#ECEFF1;color:#546E7A">😶</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Проблема</div>
+              <div class="ns-step-text">Перестав відповідати посеред кваліфікації (24 год мовчанки)</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Нагадування 1 (24 год)</div>
+              <div class="ns-step-text">«[Ім'я], ми зупинились на пів шляху! Вам ще актуально?»</div>
+            </div>
+          </div>
+          <div class="ns-branch">
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#1B5E20;color:#fff">ТАК</span><div class="ns-branch-text">Продовжуємо з того місця де зупинились</div></div>
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#C62828;color:#fff">72 год</span><div class="ns-branch-text">Нагадування 2: «Пишіть будь-коли — я тут!» → якщо мовчить → НЕАКТИВНИЙ</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#00695C">❓ «Ви робот?»</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E0F2F1;color:#00695C">🤔</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Кандидат питає</div>
+              <div class="ns-step-text">«Ви робот?» або «Хочу говорити з живою людиною»</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Агент відповідає</div>
+              <div class="ns-step-text">«Я AI-асистент Europe Service. Моє завдання — зібрати ваш запит і передати досвідченому спеціалісту, щоб він підібрав найкращі вакансії саме для вас.»</div>
+            </div>
+          </div>
+          <div class="ns-branch">
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#1B5E20;color:#fff">ТАК</span><div class="ns-branch-text">Продовжуємо кваліфікацію</div></div>
+            <div class="ns-branch-row"><span class="ns-branch-label" style="background:#C62828;color:#fff">НІ</span><div class="ns-branch-text">«Без проблем! Одразу передаю вас менеджеру.» → Ескалація</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#283593">🔄 Змінює відповідь</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E8EAF6;color:#283593">🔁</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Кандидат</div>
+              <div class="ns-step-text">Спочатку сказав одне, потім змінює або суперечить сам собі</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Агент відповідає</div>
+              <div class="ns-step-text">«Зрозумів, дякую що уточнили! Давайте зафіксуємо оновлену інформацію.» — оновлює без зауважень</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#FFF8E1;color:#F57F17">💡</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Правило</div>
+              <div class="ns-step-text">Не вказувати на протиріччя. Просто фіксувати актуальну відповідь і рухатись далі.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#1B5E20">🔥 Гарячий клієнт — прискорений режим</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E8F5E9;color:#1B5E20">⚡</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Ознаки</div>
+              <div class="ns-step-text">Відповідає швидко, сам питає деталі, готовий виїхати найближчим часом</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Тактика агента</div>
+              <div class="ns-step-text">Не гальмувати. Мінімальна кваліфікація і швидко до конкретики. Менеджер — за 1 годину.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-card">
+        <div class="ns-card-header" style="background:#37474F">🧊 Холодний / підозрілий клієнт</div>
+        <div class="ns-card-body">
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#ECEFF1;color:#37474F">🛡</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Ознаки</div>
+              <div class="ns-step-text">Відповідає скупо, підозрює шахрайство, «чому треба платити?», недовіряє</div>
+            </div>
+          </div>
+          <div class="ns-step">
+            <div class="ns-step-icon" style="background:#E3F2FD;color:#1565C0">🤖</div>
+            <div class="ns-step-content">
+              <div class="ns-step-label">Тактика агента</div>
+              <div class="ns-step-text">Більше офіційності та логіки. Посилатись на ліцензію, договір, 45 000 клієнтів, нагороди. Менше тиску, більше часу.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CARD ═══ -->
+<div class="panel" id="panel-card">
+  <div class="diagram-wrap" style="padding:28px">
+    <h2 style="color:#1a56db;font-size:16px;margin-bottom:6px">Картка кандидата</h2>
+    <p style="color:#666;font-size:13px;margin-bottom:20px">Формується після кваліфікації і передається менеджеру</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <div style="background:#E3F2FD;border-radius:12px;padding:18px;border-left:4px solid #1565C0">
+        <div style="font-weight:700;color:#0D47A1;margin-bottom:12px;font-size:13px">ОСОБИСТІ ДАНІ</div>
+        <div class="card-field">Ім'я (як звертатись)</div>
+        <div class="card-field">Поточна країна та місто</div>
+        <div class="card-field">Вік</div>
+        <div class="card-field">Для кого шукає (сам / + хто)</div>
+        <div class="card-field">Бажана країна / місто</div>
+        <div class="card-field">Причина вибору країни</div>
+        <div class="card-field">Іноземні мови та рівень</div>
+        <div class="card-field">Viber на цьому номері: так / ні</div>
+      </div>
+
+      <div style="background:#E8F5E9;border-radius:12px;padding:18px;border-left:4px solid #2E7D32">
+        <div style="font-weight:700;color:#1B5E20;margin-bottom:12px;font-size:13px">ДОСВІД ТА ГОТОВНІСТЬ</div>
+        <div class="card-field">Досвід за кордоном: так / ні</div>
+        <div class="card-field">Де / ким / сфера (якщо був)</div>
+        <div class="card-field">Остання посада / сфера в Україні</div>
+        <div class="card-field">Відкритий до інших сфер: так / ні</div>
+        <div class="card-field">Характер роботи (склад, вир-во...)</div>
+        <div class="card-field">Потреба в житлі: так / ні</div>
+        <div class="card-field">Орієнтовна дата виїзду</div>
+        <div class="card-field">Гнучкість по термінах: так / ні</div>
+      </div>
+
+      <div style="background:#FFF3E0;border-radius:12px;padding:18px;border-left:4px solid #E65100">
+        <div style="font-weight:700;color:#BF360C;margin-bottom:12px;font-size:13px">ДОКУМЕНТИ ТА СТАТУС</div>
+        <div class="card-field">Закордонний паспорт: є / немає / оформлюється</div>
+        <div class="card-field">Виїзди за кордон після 24.02.2022</div>
+        <div class="card-field">Статус захисту в ЄС: так / ні / де</div>
+        <div class="card-field">Звертались до інших агенцій: так / ні</div>
+      </div>
+
+      <div style="background:#F3E5F5;border-radius:12px;padding:18px;border-left:4px solid #7B1FA2">
+        <div style="font-weight:700;color:#6A1B9A;margin-bottom:12px;font-size:13px">ПРІОРИТЕТ І ТЕГИ</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.07)">
+          <span style="background:#B71C1C;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px">ГАРЯЧИЙ</span>
+          <span style="font-size:11px;color:#666">виїзд до 2 тижнів, є паспорт</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.07)">
+          <span style="background:#F9A825;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px">ТЕПЛИЙ</span>
+          <span style="font-size:11px;color:#666">виїзд 1–3 місяці, гнучкий термін</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.07)">
+          <span style="background:#546E7A;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px">ХОЛОДНИЙ</span>
+          <span style="font-size:11px;color:#666">термін невизначений / принциповий</span>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#888;margin-bottom:4px">Додаткові теги:</div>
+        <div class="card-field" style="font-size:11px">ТІЛЬКИ ЦЯ ВАКАНСІЯ</div>
+        <div class="card-field" style="font-size:11px">НЕМАЄ ПАСПОРТУ</div>
+        <div class="card-field" style="font-size:11px">СКЛАДНИЙ КЛІЄНТ</div>
+        <div class="card-field" style="font-size:11px">НЕЦІЛЬОВИЙ</div>
+        <div class="card-field" style="font-size:11px">НЕАКТИВНИЙ</div>
+      </div>
+    </div>
+
+    <div style="background:#E8EAF6;border-radius:12px;padding:18px;margin-top:14px;border-left:4px solid #3949AB">
+      <div style="font-weight:700;color:#283593;margin-bottom:10px;font-size:13px">SLA — Час реакції менеджера</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="background:#B71C1C;color:#fff;border-radius:8px;padding:10px 16px;font-size:12px">🔴 ГАРЯЧИЙ — до 1 години</div>
+        <div style="background:#F9A825;color:#fff;border-radius:8px;padding:10px 16px;font-size:12px">🟡 ТЕПЛИЙ — до 3 годин</div>
+        <div style="background:#546E7A;color:#fff;border-radius:8px;padding:10px 16px;font-size:12px">🔵 ХОЛОДНИЙ — в робочий день</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true, theme: 'base',
+  flowchart: { curve: 'basis', padding: 20, nodeSpacing: 35, rankSpacing: 45 },
+  themeVariables: { fontFamily: 'Segoe UI,Arial,sans-serif', fontSize: '12px' }
+});
+
+function showTab(name) {
+  var map = { phase1:'panel-phase1', phase2:'panel-phase2', ns:'panel-ns', card:'panel-card' };
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.classList.add('inactive'); });
+  document.getElementById(map[name]).classList.add('active');
+  var idx = { phase1:0, phase2:1, ns:2, card:3 };
+  var tabs = document.querySelectorAll('.tab');
+  tabs[idx[name]].classList.add('active');
+  tabs[idx[name]].classList.remove('inactive');
+}
+
+var scales = { phase1:1, phase2:1 };
+function zoom(id, delta) {
+  scales[id] = Math.min(2.5, Math.max(0.3, (scales[id]||1) + delta));
+  applyZoom(id);
+}
+function resetZoom(id) { scales[id] = 1; applyZoom(id); }
+function applyZoom(id) {
+  var el = document.getElementById('inner-' + id);
+  if (el) el.style.transform = 'scale(' + scales[id] + ')';
+  var lbl = document.getElementById('zoom-label-' + id);
+  if (lbl) lbl.textContent = Math.round(scales[id]*100) + '%';
+}
+
+document.querySelectorAll('.diagram-scroller').forEach(el => {
+  var down=false, sx=0, sy=0, sl=0, st=0;
+  el.addEventListener('mousedown', e => { down=true; sx=e.pageX; sy=e.pageY; sl=el.scrollLeft; st=el.scrollTop; });
+  document.addEventListener('mouseup', () => down=false);
+  el.addEventListener('mousemove', e => { if (!down) return; el.scrollLeft=sl-(e.pageX-sx); el.scrollTop=st-(e.pageY-sy); });
+});
+</script>
+</body>
+</html>
