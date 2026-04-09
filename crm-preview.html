@@ -645,31 +645,37 @@
 <div id="deal-card">
 
   <!-- ── Top header ── -->
-  <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0">
-    <button onclick="closeDealCard()"
-      class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 text-xl leading-none shrink-0">&times;</button>
+  <div class="bg-white border-b border-gray-200 shrink-0">
 
-    <!-- Single candidate header (hidden for groups) -->
-    <div id="dc-header-single" class="flex items-center gap-2 min-w-0">
-      <h1 id="dc-name" class="text-lg font-bold text-gray-900 truncate"></h1>
-      <span class="text-gray-300">/</span>
-      <span class="text-sm text-gray-400 whitespace-nowrap">Угода</span>
+    <!-- Action bar -->
+    <div class="px-4 py-2 flex items-center gap-3 border-b border-gray-100">
+      <button onclick="closeDealCard()"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 text-xl leading-none shrink-0">&times;</button>
+      <!-- Single candidate title -->
+      <div id="dc-header-single" class="flex items-center gap-2 min-w-0">
+        <h1 id="dc-name" class="text-lg font-bold text-gray-900 truncate"></h1>
+        <span class="text-gray-300">/</span>
+        <span class="text-sm text-gray-400 whitespace-nowrap">Угода</span>
+      </div>
+      <!-- Group title label -->
+      <div id="dc-header-group-label" class="hidden items-center gap-2">
+        <span id="dc-group-title-badge" class="text-xs font-bold px-2.5 py-1 rounded-full"></span>
+        <span class="text-sm text-gray-400">Спільна поїздка</span>
+      </div>
+      <div class="ml-auto flex items-center gap-2 shrink-0">
+        <button class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-blue-600" title="Зателефонувати">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        </button>
+        <button class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-blue-600" title="Email">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </button>
+        <button onclick="saveDealCard()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Зберегти зміни</button>
+      </div>
     </div>
 
-    <!-- Group header rows (shown instead of single for groups) -->
-    <div id="dc-header-group" class="hidden flex-1 flex flex-col gap-0.5 min-w-0 overflow-hidden"></div>
+    <!-- Group member rows with pipelines (shown only for groups) -->
+    <div id="dc-header-group" class="hidden flex-col divide-y divide-gray-50"></div>
 
-    <div class="ml-auto flex items-center gap-2 shrink-0">
-      <!-- Phone -->
-      <button class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-blue-600" title="Зателефонувати">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-      </button>
-      <!-- Email -->
-      <button class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-blue-600" title="Email">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-      </button>
-      <button onclick="saveDealCard()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Зберегти зміни</button>
-    </div>
   </div>
 
   <!-- ── Pipeline stages (hidden for group members) ── -->
@@ -1383,9 +1389,11 @@ function renderGroupBlock(row) {
       return `<option value="${g}" ${g === gid ? 'selected' : ''}>${gc.label}</option>`;
     }).join('');
 
-  const pipeEl        = document.getElementById('dc-pipeline');
-  const headerSingle  = document.getElementById('dc-header-single');
-  const headerGroup   = document.getElementById('dc-header-group');
+  const pipeEl         = document.getElementById('dc-pipeline');
+  const headerSingle   = document.getElementById('dc-header-single');
+  const headerGroup    = document.getElementById('dc-header-group');
+  const headerGrpLabel = document.getElementById('dc-header-group-label');
+  const grpTitleBadge  = document.getElementById('dc-group-title-badge');
 
   if (!gid) {
     noneEl.style.display = '';
@@ -1393,13 +1401,25 @@ function renderGroupBlock(row) {
     pipeEl.style.display = '';
     headerSingle.classList.remove('hidden');
     headerGroup.classList.add('hidden');
-    headerGroup.innerHTML = '';
+    headerGroup.style.display = 'none';
+    headerGrpLabel.classList.add('hidden');
     return;
   }
-  // Group mode: hide single pipeline & name, show group header rows
+  // Group mode
   pipeEl.style.display = 'none';
   headerSingle.classList.add('hidden');
+  headerGrpLabel.classList.remove('hidden');
+  headerGrpLabel.style.display = 'flex';
+  const gc2 = getGroupColor(gid);
+  grpTitleBadge.textContent = gc2.label;
+  grpTitleBadge.style.background = gc2.bg;
+  grpTitleBadge.style.color = gc2.text;
+  grpTitleBadge.style.border = `1.5px solid ${gc2.border}`;
   headerGroup.classList.remove('hidden');
+  headerGroup.style.display = 'flex';
+  // Hide sidebar members — they're now in the header
+  noneEl.style.display = 'none';
+  membersEl.innerHTML = `<p class="text-xs text-gray-400 italic px-1 py-2">Учасники відображені у заголовку</p>`;
 
   noneEl.style.display = 'none';
   const gc = getGroupColor(gid);
@@ -1444,12 +1464,17 @@ function renderGroupBlock(row) {
       const cls = si < curStageIdx ? 'done' : si === curStageIdx ? 'active' : '';
       return `<div class="mini-stage ${cls}" onclick="event.stopPropagation();setStageForMember(${i},'${s}')" title="${s}">${s}</div>`;
     }).join('');
-    return `<div class="mini-pipeline-row">
-      <div class="text-sm font-bold shrink-0 cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap"
-           style="color:${isCurrent ? '#2563eb' : '#374151'};min-width:160px"
-           onclick="openDealCard(${i})">${r.first_name} ${r.last_name}</div>
-      <span class="text-gray-200 shrink-0">/</span>
-      <div class="mini-pipeline-stages">${stages}</div>
+    return `<div class="mini-pipeline-row px-4 py-2 ${isCurrent ? 'bg-blue-50' : 'hover:bg-gray-50'} cursor-pointer transition-colors"
+                 onclick="openDealCard(${i})">
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+           style="background:${isCurrent ? '#2563eb' : gc.bg};color:${isCurrent ? '#fff' : gc.text}">
+        ${r.first_name.charAt(0)}${r.last_name.charAt(0)}
+      </div>
+      <div class="text-sm font-semibold shrink-0 whitespace-nowrap"
+           style="color:${isCurrent ? '#2563eb' : '#374151'};min-width:150px">
+        ${r.first_name} ${r.last_name}
+      </div>
+      <div class="mini-pipeline-stages flex-1" onclick="event.stopPropagation()">${stages}</div>
     </div>`;
   }).join('');
 }
