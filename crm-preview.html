@@ -2743,16 +2743,20 @@ async function bxCallPost(method, body = {}) {
   return json;
 }
 
-// Fetch all users → Map(id → "Ім'я Прізвище")
-async function bxFetchUsers() {
+// Fetch only users that appear in the given deals → Map(id → "Ім'я Прізвище")
+async function bxFetchUsersForDeals(deals) {
   const map = new Map();
-  let start = 0;
-  while (true) {
-    const res = await bxCall('user.get', { START: start });
-    const users = res.result || [];
-    users.forEach(u => map.set(String(u.ID), `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim()));
-    if (!res.next || map.size >= (res.total || 0)) break;
-    start = res.next;
+  const ids = [...new Set(deals.map(d => d.ASSIGNED_BY_ID).filter(Boolean))];
+  if (!ids.length) return map;
+  // Batch by 50 IDs per request
+  for (let i = 0; i < ids.length; i += 50) {
+    const batch = ids.slice(i, i + 50);
+    const params = { START: 0 };
+    batch.forEach((id, idx) => { params[`ID[${idx}]`] = id; });
+    try {
+      const res = await bxCall('user.get', params);
+      (res.result || []).forEach(u => map.set(String(u.ID), `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim()));
+    } catch(e) { console.warn('BX user fetch:', e); }
   }
   return map;
 }
@@ -2901,14 +2905,17 @@ async function bxLoadDeals() {
   document.getElementById('bx-list').innerHTML = '';
 
   try {
-    // Fetch users and partner map in parallel with deals
-    const [deals, userMap, partnerMap] = await Promise.all([
+    // 1. Fetch deals + partner map in parallel
+    const [deals, partnerMap] = await Promise.all([
       bxFetchAllDeals(),
-      bxFetchUsers(),
       bxFetchPartnerMap(),
     ]);
-    _bxUserMap    = userMap;
     _bxPartnerMap = partnerMap;
+
+    // 2. Fetch only users that appear in these deals (much faster than all 526)
+    bxSetStatus('Завантаження менеджерів…', true);
+    const userMap = await bxFetchUsersForDeals(deals);
+    _bxUserMap = userMap;
 
     const imported = bxImportedDealIds();
     _bxDeals = deals.filter(d => !imported.has(String(d.ID)));
