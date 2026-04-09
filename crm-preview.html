@@ -979,6 +979,7 @@ async function loadCandidatesFromDB() {
     const { data, error } = await _sb.from('candidates').select('*').order('created_at', { ascending: true });
     if (error) throw error;
     MOCK_DATA.splice(0, MOCK_DATA.length, ...data.map(dbToRow));
+    applyRowOrder(); // restore user-defined sort order
     // Clear stale localStorage cache — DB is the source of truth
     try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   } catch(e) {
@@ -1291,7 +1292,30 @@ function drop(e, dispIdx) {
   const adjusted = srcOrig < tgtOrig ? tgtOrig - 1 : tgtOrig;
   MOCK_DATA.splice(adjusted, 0, item);
   dragSrcDisp = null;
+  saveRowOrder();
   renderTable();
+}
+
+function saveRowOrder() {
+  try {
+    const order = MOCK_DATA.map(r => r._db_id).filter(Boolean);
+    localStorage.setItem('crm_row_order', JSON.stringify(order));
+  } catch(e) {}
+}
+
+function applyRowOrder() {
+  try {
+    const raw = localStorage.getItem('crm_row_order');
+    if (!raw) return;
+    const order = JSON.parse(raw);
+    if (!Array.isArray(order) || !order.length) return;
+    const byId = new Map(MOCK_DATA.map(r => [r._db_id, r]));
+    const reordered = order.map(id => byId.get(id)).filter(Boolean);
+    // Append any new rows not yet in saved order
+    const inOrder = new Set(order);
+    MOCK_DATA.forEach(r => { if (!inOrder.has(r._db_id)) reordered.push(r); });
+    MOCK_DATA.splice(0, MOCK_DATA.length, ...reordered);
+  } catch(e) {}
 }
 
 function dragEnd() {
