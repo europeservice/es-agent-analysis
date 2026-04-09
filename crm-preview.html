@@ -412,6 +412,9 @@
         <button class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Excel
         </button>
+        <button onclick="showBitrixImport()" class="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Bitrix24
+        </button>
         <button onclick="showAddModal()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Додати
         </button>
@@ -2703,6 +2706,289 @@ function resetData() {
   location.reload();
 }
 
+/* ══════════════════════════════════════════════
+   BITRIX24 IMPORT
+   Webhook: https://europeservice.org.ua/rest/1/z3f1myjhkqgy42hc/
+   Stage:   C3:1 = «Подано на реєстрацію»
+══════════════════════════════════════════════ */
+const BX_WEBHOOK = 'https://europeservice.org.ua/rest/1/z3f1myjhkqgy42hc/';
+
+async function bxCall(method, params = {}) {
+  const url = new URL(BX_WEBHOOK + method + '.json');
+  Object.entries(params).forEach(([k, v]) => {
+    if (Array.isArray(v)) v.forEach((vi, i) => url.searchParams.append(`${k}[${i}]`, vi));
+    else url.searchParams.set(k, v);
+  });
+  const resp = await fetch(url.toString());
+  if (!resp.ok) throw new Error(`Bitrix24 HTTP ${resp.status}`);
+  const json = await resp.json();
+  if (json.error) throw new Error(json.error_description || json.error);
+  return json;
+}
+
+async function bxCallPost(method, body = {}) {
+  const resp = await fetch(BX_WEBHOOK + method + '.json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`Bitrix24 HTTP ${resp.status}`);
+  const json = await resp.json();
+  if (json.error) throw new Error(json.error_description || json.error);
+  return json;
+}
+
+// Paginate through all deals in stage C3:1
+async function bxFetchAllDeals() {
+  const deals = [];
+  let start = 0;
+  while (true) {
+    const res = await bxCallPost('crm.deal.list', {
+      SELECT: ['ID','TITLE','BEGINDATE','ASSIGNED_BY_ID',
+               'UF_CRM_1583938977868','UF_CRM_5E0E157BC1687',
+               'UF_CRM_5E68F54E6A529','UF_CRM_5E68F54E7DAFD'],
+      FILTER: { STAGE_ID: 'C3:1' },
+      START: start,
+    });
+    deals.push(...(res.result || []));
+    if (!res.next || deals.length >= (res.total || 0)) break;
+    start = res.next;
+  }
+  return deals;
+}
+
+// Get already-imported Bitrix deal IDs from current MOCK_DATA
+function bxImportedDealIds() {
+  const ids = new Set();
+  MOCK_DATA.forEach(r => {
+    const bid = r.personal_details && r.personal_details.bitrix_deal_id;
+    if (bid) ids.add(String(bid));
+  });
+  return ids;
+}
+
+// Calc age from YYYY-MM-DD birthdate
+function calcAge(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  const m = today.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+  return age > 0 ? age : null;
+}
+
+// Map Bitrix contact + deal → CRM row (no _db_id yet)
+function bxMapRow(contact, deal, groupId) {
+  const c = contact;
+  const phones = c.PHONE || [];
+  const phone = phones[0] ? phones[0].VALUE : '';
+  const pd = {};
+
+  if (c.UF_CRM_1583932297515) pd.passport_number     = c.UF_CRM_1583932297515;
+  if (c.UF_CRM_1583932420)    pd.addr_full           = c.UF_CRM_1583932420;
+  if (c.UF_CRM_1590062088244) pd.father_name_en      = c.UF_CRM_1590062088244;
+  if (c.UF_CRM_1590062099682) pd.mother_name_en      = c.UF_CRM_1590062099682;
+  if (c.UF_CRM_1590065082012) pd.passport_valid_from = c.UF_CRM_1590065082012;
+  if (c.UF_CRM_1590065106016) pd.passport_valid_to   = c.UF_CRM_1590065106016;
+  if (c.UF_CRM_1590065233017) pd.birth_place         = c.UF_CRM_1590065233017;
+  if (c.UF_CRM_1590065684648) pd.size_shoes          = c.UF_CRM_1590065684648;
+  if (c.UF_CRM_1590066021772) pd.addr_zip            = c.UF_CRM_1590066021772;
+  if (c.UF_CRM_1590067284878) pd.height              = c.UF_CRM_1590067284878;
+  if (c.UF_CRM_1598516665856) pd.foreign_phone       = c.UF_CRM_1598516665856;
+  if (c.UF_CRM_62B5BEA041BC6) pd.birth_last_name_en  = c.UF_CRM_62B5BEA041BC6;
+  pd.bitrix_deal_id     = deal.ID;
+  pd.bitrix_contact_id  = c.ID;
+
+  return {
+    _db_id:            null,
+    group_id:          groupId,
+    branch:            '',
+    responsible:       deal.ASSIGNED_BY_ID ? `Bitrix #${deal.ASSIGNED_BY_ID}` : '',
+    payment_type:      '',
+    payment_fee:       deal.UF_CRM_5E68F54E6A529 ? parseFloat(deal.UF_CRM_5E68F54E6A529) : null,
+    registration_date: deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '',
+    first_name:        c.LAST_NAME  || '',
+    last_name:         c.NAME       || '',
+    phone:             phone,
+    age:               calcAge(c.BIRTHDATE),
+    candidate_country: '',
+    vacancy_country:   '',
+    project_name:      deal.UF_CRM_5E0E157BC1687 || '',
+    partner_number:    '',
+    arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
+    transport:         '',
+    status_adm:        'Зареєстровано',
+    quality_submission: false,
+    payment_amount:    deal.UF_CRM_5E68F54E7DAFD ? parseFloat(deal.UF_CRM_5E68F54E7DAFD) : null,
+    payment_status:    'Не виплачено',
+    comments:          [],
+    personal_details:  pd,
+  };
+}
+
+// ── UI state ──
+let _bxDeals = [];
+
+function showBitrixImport() {
+  _bxDeals = [];
+  document.getElementById('bx-list').innerHTML = '';
+  document.getElementById('bx-status-text').textContent = 'Натисніть «Завантажити» щоб отримати угоди.';
+  document.getElementById('bx-spinner').classList.add('hidden');
+  document.getElementById('bx-load-btn').classList.remove('hidden');
+  document.getElementById('bx-import-btn').classList.add('hidden');
+  document.getElementById('bx-count-label').textContent = '';
+  document.getElementById('bx-select-all').checked = false;
+  document.getElementById('bitrix-modal').style.display = '';
+}
+
+function hideBitrixImport() {
+  document.getElementById('bitrix-modal').style.display = 'none';
+}
+
+function bxSetStatus(text, spinning) {
+  document.getElementById('bx-status-text').textContent = text;
+  document.getElementById('bx-spinner').classList.toggle('hidden', !spinning);
+}
+
+async function bxLoadDeals() {
+  bxSetStatus('Завантаження угод із Bitrix24…', true);
+  document.getElementById('bx-load-btn').disabled = true;
+  document.getElementById('bx-list').innerHTML = '';
+
+  try {
+    const deals = await bxFetchAllDeals();
+    const imported = bxImportedDealIds();
+    _bxDeals = deals.filter(d => !imported.has(String(d.ID)));
+
+    if (!_bxDeals.length) {
+      bxSetStatus(`Нових угод немає (${deals.length} вже імпортовані або статус порожній).`, false);
+      document.getElementById('bx-load-btn').disabled = false;
+      return;
+    }
+
+    bxSetStatus(`Знайдено ${_bxDeals.length} нових угод (${deals.length - _bxDeals.length} вже в CRM).`, false);
+    bxRenderDealList();
+    document.getElementById('bx-import-btn').classList.remove('hidden');
+    document.getElementById('bx-load-btn').classList.add('hidden');
+  } catch(e) {
+    bxSetStatus('Помилка: ' + (e.message || e), false);
+    document.getElementById('bx-load-btn').disabled = false;
+  }
+}
+
+function bxRenderDealList() {
+  const listEl = document.getElementById('bx-list');
+  listEl.innerHTML = '';
+  _bxDeals.forEach((deal, i) => {
+    const title = deal.TITLE || `Угода #${deal.ID}`;
+    const project = deal.UF_CRM_5E0E157BC1687 || '—';
+    const date = deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '—';
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-orange-50 cursor-pointer transition-colors';
+    div.innerHTML = `
+      <input type="checkbox" class="bx-deal-cb mt-0.5 rounded" data-idx="${i}" checked onchange="bxUpdateCount()"/>
+      <div class="min-w-0 flex-1">
+        <div class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(title)}</div>
+        <div class="text-xs text-gray-400 mt-0.5">Проект: ${escapeHtml(project)} · Дата: ${date} · ID: ${deal.ID}</div>
+      </div>`;
+    div.onclick = e => {
+      if (e.target.type === 'checkbox') return;
+      const cb = div.querySelector('.bx-deal-cb');
+      cb.checked = !cb.checked;
+      bxUpdateCount();
+    };
+    listEl.appendChild(div);
+  });
+  bxUpdateCount();
+}
+
+function bxUpdateCount() {
+  const cbs = document.querySelectorAll('.bx-deal-cb');
+  const checked = Array.from(cbs).filter(c => c.checked).length;
+  document.getElementById('bx-count-label').textContent = `Обрано: ${checked} з ${cbs.length}`;
+  const allChecked = checked === cbs.length;
+  document.getElementById('bx-select-all').checked = allChecked;
+  document.getElementById('bx-select-all').indeterminate = checked > 0 && !allChecked;
+}
+
+function bxToggleAll(checked) {
+  document.querySelectorAll('.bx-deal-cb').forEach(cb => { cb.checked = checked; });
+  bxUpdateCount();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function bxImportSelected() {
+  const cbs = Array.from(document.querySelectorAll('.bx-deal-cb')).filter(c => c.checked);
+  if (!cbs.length) { alert('Оберіть хоча б одну угоду.'); return; }
+
+  const selectedDeals = cbs.map(cb => _bxDeals[parseInt(cb.dataset.idx)]);
+  const btn = document.getElementById('bx-import-btn');
+  btn.disabled = true;
+  btn.textContent = 'Імпорт…';
+  bxSetStatus(`Імпортуємо ${selectedDeals.length} угод…`, true);
+
+  let imported = 0, failed = 0;
+
+  for (const deal of selectedDeals) {
+    try {
+      // 1. Get linked contacts
+      const contactsRes = await bxCall('crm.deal.contact.items.get', { id: deal.ID });
+      const contactLinks = contactsRes.result || [];
+
+      if (!contactLinks.length) {
+        // No contacts — import deal only with empty contact fields
+        const row = bxMapRow({}, deal, null);
+        row.first_name = deal.TITLE || '';
+        row.last_name = '';
+        const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
+        if (!error && data) { row._db_id = data.id; MOCK_DATA.push(row); imported++; }
+        else { failed++; }
+        continue;
+      }
+
+      // 2. Assign group_id if multi-contact deal
+      const groupId = contactLinks.length > 1
+        ? `bx_${deal.ID}_${Date.now()}`
+        : null;
+
+      // 3. Fetch each contact and save
+      for (const link of contactLinks) {
+        const contactRes = await bxCall('crm.contact.get', { id: link.CONTACT_ID });
+        const contact = contactRes.result || {};
+        const row = bxMapRow(contact, deal, groupId);
+        const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
+        if (!error && data) { row._db_id = data.id; MOCK_DATA.push(row); imported++; }
+        else { console.warn('Insert error:', error); failed++; }
+      }
+    } catch(e) {
+      console.warn('Bitrix import deal error:', deal.ID, e);
+      failed++;
+    }
+
+    bxSetStatus(`Імпортовано: ${imported}… (${failed > 0 ? failed + ' помилок' : 'без помилок'})`, true);
+  }
+
+  // Done
+  saveRowOrder();
+  renderTable();
+  bxSetStatus(
+    `Готово! Імпортовано ${imported} кандидатів.${failed ? ` Помилок: ${failed}.` : ''}`,
+    false
+  );
+  btn.disabled = false;
+  btn.textContent = 'Імпортувати';
+  document.getElementById('bx-load-btn').classList.remove('hidden');
+  document.getElementById('bx-load-btn').disabled = false;
+  document.getElementById('bx-import-btn').classList.add('hidden');
+  document.getElementById('bx-list').innerHTML = '';
+  _bxDeals = [];
+}
+
 /* ── Init ── */
 function initStatusDropdowns() {
   const f = document.getElementById('filter-status');
@@ -2865,6 +3151,52 @@ initStatusDropdowns();
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══════════ BITRIX24 IMPORT MODAL ══════════ -->
+<div id="bitrix-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" style="display:none">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-gray-900">Імпорт з Bitrix24</h2>
+          <p class="text-xs text-gray-400">Угоди в статусі «Подано на реєстрацію»</p>
+        </div>
+      </div>
+      <button onclick="hideBitrixImport()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
+    </div>
+
+    <!-- Status bar -->
+    <div id="bx-status" class="px-6 py-3 text-sm text-gray-500 border-b border-gray-100 shrink-0 flex items-center gap-2">
+      <svg id="bx-spinner" class="w-4 h-4 text-orange-500 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+      </svg>
+      <span id="bx-status-text">Натисніть «Завантажити» щоб отримати угоди.</span>
+    </div>
+
+    <!-- Deal list -->
+    <div id="bx-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 shrink-0 gap-3">
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="bx-select-all" class="rounded" onchange="bxToggleAll(this.checked)"/>
+        <label for="bx-select-all" class="text-sm text-gray-600 cursor-pointer">Обрати всі</label>
+        <span id="bx-count-label" class="text-xs text-gray-400 ml-2"></span>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="hideBitrixImport()" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Скасувати</button>
+        <button id="bx-load-btn" onclick="bxLoadDeals()" class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">Завантажити</button>
+        <button id="bx-import-btn" onclick="bxImportSelected()" class="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium hidden">Імпортувати</button>
+      </div>
+    </div>
   </div>
 </div>
 </body>
