@@ -590,25 +590,26 @@
       <button onclick="hideAddModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
     </div>
     <div class="p-6 grid grid-cols-2 gap-4">
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Філія</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Відповідальний</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Ім'я *</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Прізвище *</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Телефон</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вік</label><input type="number" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна кандидата</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна вакансії</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Назва проекту</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вид оплати</label><input type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Сума оплати</label><input type="number" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Дата заїзду</label><input type="date" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Філія</label><input id="am-branch" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Відповідальний</label><input id="am-responsible" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Ім'я *</label><input id="am-first-name" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Прізвище *</label><input id="am-last-name" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Телефон</label><input id="am-phone" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вік</label><input id="am-age" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна кандидата</label><input id="am-cand-country" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна вакансії</label><input id="am-vac-country" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Назва проекту</label><input id="am-project" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вид оплати</label><input id="am-payment-type" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Сума оплати</label><input id="am-payment-amount" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Дата заїзду</label><input id="am-arrival-date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Статус (Adm)</label><select id="modal-status" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"></select></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Якісна подача</label>
-        <select class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"><option value="">—</option><option>Так</option><option>Ні</option></select></div>
+        <select id="am-quality" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"><option value="">—</option><option value="true">Так</option><option value="false">Ні</option></select></div>
     </div>
+    <div id="am-error" class="hidden mx-6 mb-2 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200"></div>
     <div class="flex justify-end gap-3 px-6 pb-6 border-t pt-4">
       <button onclick="hideAddModal()" class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Скасувати</button>
-      <button onclick="hideAddModal()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">Зберегти</button>
+      <button id="am-save-btn" onclick="saveNewCandidate()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">Зберегти</button>
     </div>
   </div>
 </div>
@@ -901,6 +902,8 @@ async function loadCandidatesFromDB() {
     const { data, error } = await _sb.from('candidates').select('*').order('created_at', { ascending: true });
     if (error) throw error;
     MOCK_DATA.splice(0, MOCK_DATA.length, ...data.map(dbToRow));
+    // Clear stale localStorage cache — DB is the source of truth
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   } catch(e) {
     console.warn('DB load failed, using localStorage:', e);
     loadFromStorage();
@@ -2125,8 +2128,84 @@ async function showLogin() {
   document.getElementById('login-screen').style.display = '';
   document.getElementById('dashboard').style.display = 'none';
 }
-function showAddModal() { document.getElementById('add-modal').style.display = ''; }
+function showAddModal() {
+  // Reset form fields
+  ['am-branch','am-responsible','am-first-name','am-last-name','am-phone',
+   'am-age','am-cand-country','am-vac-country','am-project','am-payment-type',
+   'am-payment-amount','am-arrival-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const q = document.getElementById('am-quality');
+  if (q) q.value = '';
+  const ms = document.getElementById('modal-status');
+  if (ms) ms.value = STATUSES[0] || '';
+  const err = document.getElementById('am-error');
+  if (err) err.classList.add('hidden');
+  document.getElementById('add-modal').style.display = '';
+}
 function hideAddModal() { document.getElementById('add-modal').style.display = 'none'; }
+
+async function saveNewCandidate() {
+  const firstName = document.getElementById('am-first-name').value.trim();
+  const lastName  = document.getElementById('am-last-name').value.trim();
+  const errEl     = document.getElementById('am-error');
+  if (!firstName && !lastName) {
+    errEl.textContent = "Вкажіть хоча б ім'я або прізвище";
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  const saveBtn = document.getElementById('am-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Збереження…';
+
+  const today = new Date().toISOString().slice(0, 10);
+  const arrivalRaw = document.getElementById('am-arrival-date').value;
+  const qualityVal = document.getElementById('am-quality').value;
+
+  const newRow = {
+    _db_id: null,
+    group_id: null,
+    branch:            document.getElementById('am-branch').value.trim(),
+    responsible:       document.getElementById('am-responsible').value.trim(),
+    payment_type:      document.getElementById('am-payment-type').value.trim(),
+    payment_fee:       null,
+    registration_date: today,
+    first_name:        firstName,
+    last_name:         lastName,
+    phone:             document.getElementById('am-phone').value.trim(),
+    age:               document.getElementById('am-age').value ? parseInt(document.getElementById('am-age').value) : null,
+    candidate_country: document.getElementById('am-cand-country').value.trim(),
+    vacancy_country:   document.getElementById('am-vac-country').value.trim(),
+    project_name:      document.getElementById('am-project').value.trim(),
+    partner_number:    '',
+    arrival_date:      arrivalRaw || null,
+    transport:         '',
+    status_adm:        document.getElementById('modal-status').value || STATUSES[0],
+    quality_submission: qualityVal === 'true',
+    payment_amount:    document.getElementById('am-payment-amount').value ? parseFloat(document.getElementById('am-payment-amount').value) : null,
+    payment_status:    'Не виплачено',
+    comments:          [],
+  };
+
+  try {
+    const { data, error } = await _sb.from('candidates').insert(rowToDb(newRow)).select('id').single();
+    if (error) throw error;
+    newRow._db_id = data.id;
+    MOCK_DATA.push(newRow);
+    persist();
+    hideAddModal();
+    renderTable();
+  } catch(e) {
+    errEl.textContent = 'Помилка збереження: ' + (e.message || e);
+    errEl.classList.remove('hidden');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = 'Зберегти';
+  }
+}
 
 function deleteCandidate(idx) {
   if (!confirm('Видалити кандидата?')) return;
