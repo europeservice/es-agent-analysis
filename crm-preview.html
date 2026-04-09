@@ -84,7 +84,8 @@
     .drag-handle:hover { color: #6b7280; }
     .drag-handle:active { cursor: grabbing; }
     tr.dragging { opacity: .35; }
-    tr.drag-over { box-shadow: 0 -3px 0 0 #3b82f6 inset; }
+    tr.drag-over-before { box-shadow: inset 0  3px 0 0 #3b82f6; }
+    tr.drag-over-after  { box-shadow: inset 0 -3px 0 0 #3b82f6; }
 
     /* ── Group highlight in table ── */
     tr.group-highlight td { background: rgba(250,204,21,.18) !important; }
@@ -1263,34 +1264,46 @@ function renderTable() {
 
 /* ── Drag & drop row reorder ── */
 let dragSrcDisp = null;
+let _dropAfter  = false;
 
 function dragStart(e, dispIdx) {
   dragSrcDisp = dispIdx;
   e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(dispIdx));
   setTimeout(() => {
     const tr = document.querySelector(`tr[data-di="${dispIdx}"]`);
     if (tr) tr.classList.add('dragging');
   }, 0);
 }
 
+function _clearDragOver() {
+  document.querySelectorAll('tbody tr').forEach(r =>
+    r.classList.remove('drag-over-before', 'drag-over-after'));
+}
+
 function dragOver(e, dispIdx) {
   e.preventDefault();
+  if (dragSrcDisp === null) return;
   e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('drag-over'));
-  if (dispIdx !== dragSrcDisp) {
-    const tr = document.querySelector(`tr[data-di="${dispIdx}"]`);
-    if (tr) tr.classList.add('drag-over');
-  }
+  _clearDragOver();
+  if (dispIdx === dragSrcDisp) return;
+  const tr = document.querySelector(`tr[data-di="${dispIdx}"]`);
+  if (!tr) return;
+  const rect = tr.getBoundingClientRect();
+  _dropAfter = e.clientY > rect.top + rect.height / 2;
+  tr.classList.add(_dropAfter ? 'drag-over-after' : 'drag-over-before');
 }
 
 function drop(e, dispIdx) {
   e.preventDefault();
-  if (dragSrcDisp === null || dragSrcDisp === dispIdx) return;
+  if (dragSrcDisp === null || dragSrcDisp === dispIdx) { dragSrcDisp = null; return; }
   const srcOrig = filteredIndices[dragSrcDisp];
   const tgtOrig = filteredIndices[dispIdx];
   const item = MOCK_DATA.splice(srcOrig, 1)[0];
-  const adjusted = srcOrig < tgtOrig ? tgtOrig - 1 : tgtOrig;
-  MOCK_DATA.splice(adjusted, 0, item);
+  let insertAt = srcOrig < tgtOrig ? tgtOrig - 1 : tgtOrig;
+  if (_dropAfter) insertAt += 1;
+  insertAt = Math.max(0, Math.min(MOCK_DATA.length, insertAt));
+  MOCK_DATA.splice(insertAt, 0, item);
   dragSrcDisp = null;
   saveRowOrder();
   renderTable();
@@ -1320,7 +1333,7 @@ function applyRowOrder() {
 
 function dragEnd() {
   document.querySelectorAll('tbody tr').forEach(r => {
-    r.classList.remove('dragging', 'drag-over');
+    r.classList.remove('dragging', 'drag-over-before', 'drag-over-after');
     r.setAttribute('draggable', 'false');
   });
   dragSrcDisp = null;
