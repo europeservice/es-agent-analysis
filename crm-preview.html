@@ -2713,6 +2713,11 @@ function resetData() {
 ══════════════════════════════════════════════ */
 const BX_WEBHOOK = 'https://europeservice.org.ua/rest/1/z3f1myjhkqgy42hc/';
 
+// Enum lookup tables (id → text) for deal fields
+const BX_CAND_COUNTRY = {'2221':'Україна','2222':'Чехія','2223':'Польща','2430':'Румунія','2591':'Литва','2835':'Словаччина','2836':'Нідерланди','2837':'Угорщина','2838':'Німеччина','2839':'інше'};
+const BX_VAC_COUNTRY  = {'2805':'Польща','2806':'Чехія','2807':'Литва','2808':'Румунія','2809':'Німеччина','2810':'Угорщина','2811':'Словаччина','2812':'Нідерланди','2813':'Греція','2814':'Англія','4609':'Іспанія','4904':'Латвія','4978':'Франція','5000':'Італія','5248':'Хорватія'};
+const BX_TRANSPORT    = {'2572':'Самостійно','2573':'Перевізник партнера','2574':'Перевізник ES','4882':'Рейсовий автобус'};
+
 async function bxCall(method, params = {}) {
   const url = new URL(BX_WEBHOOK + method + '.json');
   Object.entries(params).forEach(([k, v]) => {
@@ -2738,7 +2743,21 @@ async function bxCallPost(method, body = {}) {
   return json;
 }
 
-// Paginate through all deals in stage C3:1
+// Fetch all users → Map(id → "Ім'я Прізвище")
+async function bxFetchUsers() {
+  const map = new Map();
+  let start = 0;
+  while (true) {
+    const res = await bxCall('user.get', { START: start });
+    const users = res.result || [];
+    users.forEach(u => map.set(String(u.ID), `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim()));
+    if (!res.next || map.size >= (res.total || 0)) break;
+    start = res.next;
+  }
+  return map;
+}
+
+// Fetch all deals in stage C3:1 with all required fields
 async function bxFetchAllDeals() {
   const deals = [];
   let start = 0;
@@ -2746,7 +2765,9 @@ async function bxFetchAllDeals() {
     const res = await bxCallPost('crm.deal.list', {
       SELECT: ['ID','TITLE','BEGINDATE','ASSIGNED_BY_ID',
                'UF_CRM_1583938977868','UF_CRM_5E0E157BC1687',
-               'UF_CRM_5E68F54E6A529','UF_CRM_5E68F54E7DAFD'],
+               'UF_CRM_5E68F54E6A529','UF_CRM_5E68F54E7DAFD',
+               'UF_CRM_1599049456837','UF_CRM_1652443508655',
+               'UF_CRM_1621259911012','UF_CRM_1622814641187'],
       FILTER: { STAGE_ID: 'C3:1' },
       START: start,
     });
@@ -2755,6 +2776,19 @@ async function bxFetchAllDeals() {
     start = res.next;
   }
   return deals;
+}
+
+// Fetch partner enum map from Bitrix24 (Партнер №X → "Партнер №X")
+async function bxFetchPartnerMap() {
+  const map = {};
+  try {
+    const res = await bxCallPost('crm.deal.userfield.list', { FILTER: { FIELD_NAME: 'UF_CRM_1621259911012' } });
+    const field = (res.result || [])[0];
+    if (field && field.LIST) {
+      field.LIST.forEach(item => { map[String(item.ID)] = item.VALUE; });
+    }
+  } catch(e) { console.warn('BX partner map:', e); }
+  return map;
 }
 
 // Get already-imported Bitrix deal IDs from current MOCK_DATA
@@ -2780,7 +2814,7 @@ function calcAge(dateStr) {
 }
 
 // Map Bitrix contact + deal → CRM row (no _db_id yet)
-function bxMapRow(contact, deal, groupId) {
+function bxMapRow(contact, deal, groupId, userMap, partnerMap) {
   const c = contact;
   const phones = c.PHONE || [];
   const phone = phones[0] ? phones[0].VALUE : '';
@@ -2801,25 +2835,32 @@ function bxMapRow(contact, deal, groupId) {
   pd.bitrix_deal_id     = deal.ID;
   pd.bitrix_contact_id  = c.ID;
 
+  // Resolve enums
+  const candCountry  = BX_CAND_COUNTRY[String(deal.UF_CRM_1599049456837)] || '';
+  const vacCountry   = BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)]  || '';
+  const transport    = BX_TRANSPORT[String(deal.UF_CRM_1622814641187)]     || '';
+  const partnerNum   = partnerMap[String(deal.UF_CRM_1621259911012)]       || '';
+  const responsible  = userMap ? (userMap.get(String(deal.ASSIGNED_BY_ID)) || '') : '';
+
   return {
     _db_id:            null,
     group_id:          groupId,
     branch:            '',
-    responsible:       deal.ASSIGNED_BY_ID ? `Bitrix #${deal.ASSIGNED_BY_ID}` : '',
+    responsible:       responsible,
     payment_type:      '',
     payment_fee:       deal.UF_CRM_5E68F54E6A529 ? parseFloat(deal.UF_CRM_5E68F54E6A529) : null,
     registration_date: deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '',
-    first_name:        c.LAST_NAME  || '',
-    last_name:         c.NAME       || '',
+    first_name:        c.NAME      || '',
+    last_name:         c.LAST_NAME || '',
     phone:             phone,
     age:               calcAge(c.BIRTHDATE),
-    candidate_country: '',
-    vacancy_country:   '',
-    project_name:      deal.UF_CRM_5E0E157BC1687 || '',
-    partner_number:    '',
+    candidate_country: candCountry,
+    vacancy_country:   vacCountry,
+    project_name:      (deal.UF_CRM_5E0E157BC1687 || '').trim(),
+    partner_number:    partnerNum,
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
-    transport:         '',
-    status_adm:        'Зареєстровано',
+    transport:         transport,
+    status_adm:        'Подано на реєстрацію',
     quality_submission: false,
     payment_amount:    deal.UF_CRM_5E68F54E7DAFD ? parseFloat(deal.UF_CRM_5E68F54E7DAFD) : null,
     payment_status:    'Не виплачено',
@@ -2830,6 +2871,8 @@ function bxMapRow(contact, deal, groupId) {
 
 // ── UI state ──
 let _bxDeals = [];
+let _bxUserMap = null;
+let _bxPartnerMap = {};
 
 function showBitrixImport() {
   _bxDeals = [];
@@ -2853,12 +2896,20 @@ function bxSetStatus(text, spinning) {
 }
 
 async function bxLoadDeals() {
-  bxSetStatus('Завантаження угод із Bitrix24…', true);
+  bxSetStatus('Завантаження угод і користувачів…', true);
   document.getElementById('bx-load-btn').disabled = true;
   document.getElementById('bx-list').innerHTML = '';
 
   try {
-    const deals = await bxFetchAllDeals();
+    // Fetch users and partner map in parallel with deals
+    const [deals, userMap, partnerMap] = await Promise.all([
+      bxFetchAllDeals(),
+      bxFetchUsers(),
+      bxFetchPartnerMap(),
+    ]);
+    _bxUserMap    = userMap;
+    _bxPartnerMap = partnerMap;
+
     const imported = bxImportedDealIds();
     _bxDeals = deals.filter(d => !imported.has(String(d.ID)));
 
@@ -2882,16 +2933,18 @@ function bxRenderDealList() {
   const listEl = document.getElementById('bx-list');
   listEl.innerHTML = '';
   _bxDeals.forEach((deal, i) => {
-    const title = deal.TITLE || `Угода #${deal.ID}`;
-    const project = deal.UF_CRM_5E0E157BC1687 || '—';
-    const date = deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '—';
+    const title    = deal.TITLE || `Угода #${deal.ID}`;
+    const project  = (deal.UF_CRM_5E0E157BC1687 || '').trim() || '—';
+    const country  = BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)] || '—';
+    const manager  = _bxUserMap ? (_bxUserMap.get(String(deal.ASSIGNED_BY_ID)) || '—') : '—';
+    const date     = deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '—';
     const div = document.createElement('div');
     div.className = 'flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-orange-50 cursor-pointer transition-colors';
     div.innerHTML = `
       <input type="checkbox" class="bx-deal-cb mt-0.5 rounded" data-idx="${i}" checked onchange="bxUpdateCount()"/>
       <div class="min-w-0 flex-1">
         <div class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(title)}</div>
-        <div class="text-xs text-gray-400 mt-0.5">Проект: ${escapeHtml(project)} · Дата: ${date} · ID: ${deal.ID}</div>
+        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(country)} · ${escapeHtml(project)} · ${escapeHtml(manager)} · ${date}</div>
       </div>`;
     div.onclick = e => {
       if (e.target.type === 'checkbox') return;
@@ -2942,7 +2995,7 @@ async function bxImportSelected() {
 
       if (!contactLinks.length) {
         // No contacts — import deal only with empty contact fields
-        const row = bxMapRow({}, deal, null);
+        const row = bxMapRow({}, deal, null, _bxUserMap, _bxPartnerMap);
         row.first_name = deal.TITLE || '';
         row.last_name = '';
         const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
@@ -2960,7 +3013,7 @@ async function bxImportSelected() {
       for (const link of contactLinks) {
         const contactRes = await bxCall('crm.contact.get', { id: link.CONTACT_ID });
         const contact = contactRes.result || {};
-        const row = bxMapRow(contact, deal, groupId);
+        const row = bxMapRow(contact, deal, groupId, _bxUserMap, _bxPartnerMap);
         const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
         if (!error && data) { row._db_id = data.id; MOCK_DATA.push(row); imported++; }
         else { console.warn('Insert error:', error); failed++; }
