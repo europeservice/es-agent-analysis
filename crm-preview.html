@@ -108,6 +108,11 @@
     .ms-ctrl-btn.ms-ctrl-dim:hover { text-decoration: none; }
     .ms-ctrl-sep { font-size: 11px; color: #cbd5e1; }
     .ms-divider { height: 1px; background: #f1f5f9; margin: 2px 0 4px; }
+    .ms-footer { display: flex; gap: 6px; padding: 6px 8px 8px; border-top: 1px solid #f1f5f9; margin-top: 4px; }
+    .ms-ok-btn { flex: 1; padding: 5px 0; font-size: 12px; font-weight: 600; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background .15s; }
+    .ms-ok-btn:hover { background: #1d4ed8; }
+    .ms-cancel-btn { flex: 1; padding: 5px 0; font-size: 12px; font-weight: 500; background: #f1f5f9; color: #374151; border: none; border-radius: 6px; cursor: pointer; transition: background .15s; }
+    .ms-cancel-btn:hover { background: #e2e8f0; }
 
     /* ── Drag & drop ── */
     .drag-handle { cursor: grab; color: #d1d5db; transition: color .15s; }
@@ -1161,25 +1166,24 @@ function setColFilter(key, val) {
   renderTable();
 }
 
-function toggleMsOption(key, val) {
-  const cur = Array.isArray(columnFilters[key]) ? [...columnFilters[key]] : [];
-  const idx = cur.indexOf(val);
-  if (idx === -1) cur.push(val); else cur.splice(idx, 1);
-  setColFilter(key, cur);
-}
-
+let _msPending = {};
 let _openMsKey = null;
+
 function toggleMsDropdown(key, btnEl) {
   if (_openMsKey && _openMsKey !== key) closeMsDropdown();
   const dd = document.getElementById('ms-dd-' + key);
   if (!dd) return;
   if (dd.classList.contains('open')) { closeMsDropdown(); return; }
+  // Init pending from current filter
+  _msPending[key] = Array.isArray(columnFilters[key]) ? [...columnFilters[key]] : [];
+  _updateMsCheckboxes(key);
   const rect = btnEl.getBoundingClientRect();
   dd.style.top  = (rect.bottom + 2) + 'px';
   dd.style.left = rect.left + 'px';
   dd.classList.add('open');
   _openMsKey = key;
 }
+
 function closeMsDropdown() {
   if (_openMsKey) {
     const dd = document.getElementById('ms-dd-' + _openMsKey);
@@ -1187,16 +1191,55 @@ function closeMsDropdown() {
     _openMsKey = null;
   }
 }
+
 document.addEventListener('click', e => {
   if (_openMsKey && !e.target.closest('.ms-wrap')) closeMsDropdown();
 });
 
+function toggleMsOption(key, val) {
+  const cur = _msPending[key] || [];
+  const idx = cur.indexOf(val);
+  if (idx === -1) cur.push(val); else cur.splice(idx, 1);
+  _msPending[key] = cur;
+  _updateMsControls(key);
+}
+
 function msSelectAll(key) {
-  setColFilter(key, [...COL_SELECTS[key]]);
+  _msPending[key] = [...COL_SELECTS[key]];
+  _updateMsCheckboxes(key);
 }
 
 function msClearAll(key) {
-  setColFilter(key, []);
+  _msPending[key] = [];
+  _updateMsCheckboxes(key);
+}
+
+function msSave(key) {
+  setColFilter(key, _msPending[key] || []);
+  closeMsDropdown();
+}
+
+function msCancel(key) {
+  closeMsDropdown();
+}
+
+function _updateMsCheckboxes(key) {
+  const dd = document.getElementById('ms-dd-' + key);
+  if (!dd) return;
+  const sel = _msPending[key] || [];
+  dd.querySelectorAll('[data-ms-val]').forEach(cb => {
+    cb.checked = sel.includes(cb.dataset.msVal);
+  });
+  _updateMsControls(key);
+}
+
+function _updateMsControls(key) {
+  const dd = document.getElementById('ms-dd-' + key);
+  if (!dd) return;
+  const sel = _msPending[key] || [];
+  const total = (COL_SELECTS[key] || []).length;
+  dd.querySelector('.ms-all-btn')?.classList.toggle('ms-ctrl-dim', sel.length === total);
+  dd.querySelector('.ms-clear-btn')?.classList.toggle('ms-ctrl-dim', sel.length === 0);
 }
 
 function clearAllFilters() {
@@ -1239,10 +1282,9 @@ function renderTable() {
         const sel = Array.isArray(val) ? val : [];
         const label = sel.length === 0 ? 'Всі' : sel.length === 1 ? sel[0] : `${sel.length} вибрано`;
         const allOpts = COL_SELECTS[c.key];
-        const allSelected = sel.length === allOpts.length;
         const options = allOpts.map(o => `
           <label class="ms-option">
-            <input type="checkbox" ${sel.includes(o) ? 'checked' : ''}
+            <input type="checkbox" data-ms-val="${o}" ${sel.includes(o) ? 'checked' : ''}
               onchange="event.stopPropagation();toggleMsOption('${c.key}','${o}')"/>
             ${o}
           </label>`).join('');
@@ -1250,12 +1292,16 @@ function renderTable() {
           <button class="ms-btn ${active}" onclick="event.stopPropagation();toggleMsDropdown('${c.key}',this)">${label}</button>
           <div class="ms-dropdown" id="ms-dd-${c.key}">
             <div class="ms-controls">
-              <button onclick="event.stopPropagation();msSelectAll('${c.key}')" class="ms-ctrl-btn ${allSelected?'ms-ctrl-dim':''}">Вибрати всі</button>
+              <button onclick="event.stopPropagation();msSelectAll('${c.key}')" class="ms-ctrl-btn ms-all-btn">Вибрати всі</button>
               <span class="ms-ctrl-sep">—</span>
-              <button onclick="event.stopPropagation();msClearAll('${c.key}')" class="ms-ctrl-btn ${!sel.length?'ms-ctrl-dim':''}">Очистити</button>
+              <button onclick="event.stopPropagation();msClearAll('${c.key}')" class="ms-ctrl-btn ms-clear-btn">Очистити</button>
             </div>
             <div class="ms-divider"></div>
             ${options}
+            <div class="ms-footer">
+              <button class="ms-cancel-btn" onclick="event.stopPropagation();msCancel('${c.key}')">Скасувати</button>
+              <button class="ms-ok-btn" onclick="event.stopPropagation();msSave('${c.key}')">OK</button>
+            </div>
           </div>
         </div></th>`;
       }
