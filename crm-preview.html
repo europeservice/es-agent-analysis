@@ -1373,6 +1373,38 @@ function closeDealCard() {
   dcIdx = null;
 }
 
+/* ── Member contact card ── */
+function memberContactCard(r, gc, initials, isCurrent, showArrow, idx) {
+  const phone = (r.phone || '').replace(/\s/g, '');
+  const phoneIntl = phone.startsWith('+') ? phone : '+' + phone;
+  const viberHref = phone ? `viber://chat?number=${encodeURIComponent(phoneIntl)}` : '#';
+  const tgHref    = phone ? `https://t.me/${phoneIntl}` : '#';
+
+  const phoneRow = phone ? `
+    <div class="flex items-center gap-1.5 mt-1">
+      <span class="text-xs text-gray-500 truncate">${r.phone}</span>
+      <a href="${viberHref}" onclick="event.stopPropagation()" title="Viber"
+         class="shrink-0 hover:opacity-75 transition-opacity">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="#7360f2"><path d="M11.4 0C6.15.3 1.7 3.9.4 8.9c-.6 2.4-.5 4.9.1 7.1 1 3.5 3.7 6.4 7.1 7.7l.1 2.6c0 .3.4.5.6.3l2.8-2.1c.6 0 1.1.1 1.7.1 5.8 0 10.7-4.3 11.1-10C24.4 8.1 23 3.5 19.5 1.4 17.2.1 14.3-.2 11.4 0zm4.2 16.2c-.5.5-1.1.8-1.7.7-.3 0-.7-.1-1-.3-1.4-.7-2.7-1.6-3.8-2.8-1.1-1.1-2-2.4-2.7-3.8-.3-.7-.3-1.4.1-2 .3-.4.7-.7 1.1-.9.4-.2.9 0 1.2.3l1.3 1.8c.2.4.1.8-.2 1.1l-.5.5c-.1.1-.1.3 0 .4.4.7.9 1.3 1.5 1.8.6.5 1.2 1 1.9 1.3.1.1.3 0 .4-.1l.5-.5c.3-.3.8-.4 1.1-.2l1.8 1.2c.4.3.6.8.4 1.2l-.4.3z"/></svg>
+      </a>
+      <a href="${tgHref}" target="_blank" onclick="event.stopPropagation()" title="Telegram"
+         class="shrink-0 hover:opacity-75 transition-opacity">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="#2aabee"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.9 8.2-2 9.4c-.1.6-.5.8-1 .5l-2.7-2-1.3 1.2c-.1.1-.3.2-.6.2l.2-2.8 5.2-4.7c.2-.2 0-.3-.3-.1L6.4 14.6 3.8 13.8c-.6-.2-.6-.6.1-.8l11.5-4.4c.5-.2 1 .1.5.6z"/></svg>
+      </a>
+    </div>` : '';
+
+  const clickAttr = idx !== undefined ? `onclick="openDealCard(${idx})"` : '';
+  return `<div class="group-member-card${isCurrent ? ' ring-2 ring-blue-400' : ''}" ${clickAttr}>
+    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+         style="background:${gc.bg};color:${gc.text}">${initials}</div>
+    <div class="min-w-0 flex-1">
+      <div class="text-sm font-semibold text-gray-800 truncate">${r.first_name||''} ${r.last_name||''}</div>
+      ${phoneRow}
+    </div>
+    ${showArrow ? `<svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>` : ''}
+  </div>`;
+}
+
 /* ── Group block ── */
 function renderGroupBlock(row) {
   const gid     = row.group_id;
@@ -1407,18 +1439,8 @@ function renderGroupBlock(row) {
 
     // Show contact card in sidebar
     noneEl.style.display = 'none';
-    const sc = STATUS_COLORS[row.status_adm] || '';
-    const badgeBg  = sc.includes('green') ? '#dcfce7' : sc.includes('blue') ? '#dbeafe' : sc.includes('red') ? '#fee2e2' : sc.includes('yellow') ? '#fef9c3' : sc.includes('purple') ? '#f3e8ff' : '#f1f5f9';
-    const badgeTxt = sc.includes('green') ? '#15803d' : sc.includes('blue') ? '#1d4ed8' : sc.includes('red') ? '#b91c1c' : sc.includes('yellow') ? '#854d0e' : sc.includes('purple') ? '#7e22ce' : '#475569';
     const initials = (row.first_name||'?').charAt(0) + (row.last_name||'').charAt(0);
-    membersEl.innerHTML = `<div class="group-member-card ring-2 ring-blue-400">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-blue-600 text-white">${initials}</div>
-      <div class="min-w-0 flex-1">
-        <div class="text-sm font-semibold text-gray-800 truncate">${row.first_name||''} ${row.last_name||''}</div>
-        <span class="inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full"
-              style="background:${badgeBg};color:${badgeTxt}">${row.status_adm}</span>
-      </div>
-    </div>`;
+    membersEl.innerHTML = memberContactCard(row, {bg:'#2563eb',text:'#fff'}, initials, true, false);
     return;
   }
 
@@ -1460,18 +1482,8 @@ function renderGroupBlock(row) {
         const badgeBg  = sc.includes('green') ? '#dcfce7' : sc.includes('blue') ? '#dbeafe' : sc.includes('red') ? '#fee2e2' : sc.includes('yellow') ? '#fef9c3' : sc.includes('purple') ? '#f3e8ff' : '#f1f5f9';
         const badgeTxt = sc.includes('green') ? '#15803d' : sc.includes('blue') ? '#1d4ed8' : sc.includes('red') ? '#b91c1c' : sc.includes('yellow') ? '#854d0e' : sc.includes('purple') ? '#7e22ce' : '#475569';
         const isCurrent = (i === dcIdx);
-        return `<div class="group-member-card${isCurrent ? ' ring-2 ring-blue-400' : ''}" onclick="openDealCard(${i})">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-               style="background:${gc.bg};color:${gc.text}">
-            ${r.first_name.charAt(0)}${r.last_name.charAt(0)}
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-sm font-semibold text-gray-800 truncate">${r.first_name} ${r.last_name}</div>
-            <span class="inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full truncate max-w-full"
-                  style="background:${badgeBg};color:${badgeTxt}">${r.status_adm}</span>
-          </div>
-          <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </div>`;
+        const inits = r.first_name.charAt(0) + r.last_name.charAt(0);
+        return memberContactCard(r, gc, inits, isCurrent, true, i);
       }).join('')}
     </div>`;
 
