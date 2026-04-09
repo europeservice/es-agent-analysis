@@ -1089,7 +1089,7 @@ function renderTable() {
           COL_SELECTS[c.key].map(o => `<option ${o===val?'selected':''}>${o}</option>`).join('');
         return `<th><select class="col-filter ${active}" onchange="setColFilter('${c.key}',this.value)">${opts}</select></th>`;
       }
-      const type = (c.key.includes('date')) ? 'date' : 'text';
+      const type = (c.key === 'registration_date' || c.key === 'arrival_date') ? 'date' : 'text';
       return `<th><input type="${type}" class="col-filter ${active}" value="${val}"
         oninput="setColFilter('${c.key}',this.value)" placeholder="…"/></th>`;
     }).join('') +
