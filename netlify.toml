@@ -1,9 +1,9 @@
 [[redirects]]
   from = "/"
   to = "/crm-preview.html"
-  status = 302
+  status = 200
 
 [[redirects]]
   from = "/crm"
   to = "/crm-preview.html"
-  status = 302
+  status = 200
