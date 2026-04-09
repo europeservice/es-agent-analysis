@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CRM — Кандидати</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .modal-overlay { background: rgba(0,0,0,0.5); }
@@ -254,17 +255,27 @@
 <body class="bg-slate-100 text-gray-900">
 
 <!-- ══════════ LOGIN ══════════ -->
-<div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100" style="display:none">
+<div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
   <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">CRM — Вхід</h1>
+    <h1 class="text-2xl font-bold text-center mb-2">CRM EuropeService</h1>
+    <p class="text-center text-gray-400 text-sm mb-6">Увійдіть у свій акаунт</p>
     <div class="space-y-4">
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input type="email" value="admin@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
-        <input type="password" value="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-lg" /></div>
-      <button onclick="showDashboard('head_admin')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Головний адмін</button>
-      <button onclick="showDashboard('admin')"      class="w-full bg-gray-600  text-white py-2 rounded-lg hover:bg-gray-700">Адмін (без фінансів)</button>
-      <button onclick="showDashboard('financier')"  class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Фінансист</button>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="login-email" type="email" placeholder="your@email.com"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
+        <input id="login-password" type="password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter') doLogin()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+      </div>
+      <div id="login-error" class="text-red-500 text-sm hidden"></div>
+      <button onclick="doLogin()" id="login-btn"
+        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">
+        Увійти
+      </button>
     </div>
   </div>
 </div>
@@ -278,7 +289,7 @@
         <span id="role-badge" class="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Головний адмін</span>
       </div>
       <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-500">admin@example.com</span>
+        <span id="header-email" class="text-sm text-gray-500"></span>
         <button onclick="showLogin()" class="text-sm text-red-500 hover:text-red-700 font-medium">Вийти</button>
       </div>
     </div>
@@ -810,6 +821,116 @@
 
 <!-- ══════════ SCRIPT ══════════ -->
 <script>
+/* ── Supabase ── */
+const SUPABASE_URL  = 'https://yqiymimvwrrshtkeuhcy.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxaXltaW12d3Jyc2h0a2V1aGN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjExMDQsImV4cCI6MjA5MTI5NzEwNH0.n_xLo1-r0KZyhQprbjrPQ_P4DCi_DESHjiLIxoQ1X_w';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ── DB mapping ── */
+function dbToRow(r) {
+  return {
+    _db_id:           r.id,
+    group_id:         r.group_id         || null,
+    branch:           r.branch           || '',
+    responsible:      r.responsible      || '',
+    payment_type:     r.payment_type     || '',
+    payment_fee:      r.payment_fee      ?? null,
+    registration_date:r.registration_date|| '',
+    first_name:       r.first_name       || '',
+    last_name:        r.last_name        || '',
+    phone:            r.phone            || '',
+    age:              r.age              ?? null,
+    candidate_country:r.candidate_country|| '',
+    vacancy_country:  r.vacancy_country  || '',
+    project_name:     r.project_name     || '',
+    partner_number:   r.partner_number   || '',
+    arrival_date:     r.arrival_date     || null,
+    transport:        r.transport        || '',
+    status_adm:       r.status_adm       || 'Зареєстровано',
+    quality_submission:!!r.quality_submission,
+    payment_amount:   r.payment_amount   ?? null,
+    payment_status:   r.payment_status   || 'Не виплачено',
+    comments:         Array.isArray(r.comments) ? r.comments : [],
+  };
+}
+
+function rowToDb(row) {
+  return {
+    group_id:          row.group_id          || null,
+    branch:            row.branch            || null,
+    responsible:       row.responsible       || null,
+    payment_type:      row.payment_type      || null,
+    payment_fee:       row.payment_fee       ?? null,
+    registration_date: row.registration_date || null,
+    first_name:        row.first_name        || '',
+    last_name:         row.last_name         || '',
+    phone:             row.phone             || null,
+    age:               row.age               ?? null,
+    candidate_country: row.candidate_country || null,
+    vacancy_country:   row.vacancy_country   || null,
+    project_name:      row.project_name      || null,
+    partner_number:    row.partner_number    || null,
+    arrival_date:      row.arrival_date      || null,
+    transport:         row.transport         || null,
+    status_adm:        row.status_adm        || 'Зареєстровано',
+    quality_submission:!!row.quality_submission,
+    payment_amount:    row.payment_amount    ?? null,
+    payment_status:    row.payment_status    || 'Не виплачено',
+    comments:          row.comments          || [],
+  };
+}
+
+async function syncRowToDB(row) {
+  try {
+    if (row._db_id) {
+      await _sb.from('candidates').update(rowToDb(row)).eq('id', row._db_id);
+    } else {
+      const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
+      if (!error && data) row._db_id = data.id;
+    }
+  } catch(e) { console.warn('DB sync:', e); }
+}
+
+async function deleteRowFromDB(dbId) {
+  if (!dbId) return;
+  try { await _sb.from('candidates').delete().eq('id', dbId); } catch(e) {}
+}
+
+async function loadCandidatesFromDB() {
+  try {
+    const { data, error } = await _sb.from('candidates').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    MOCK_DATA.splice(0, MOCK_DATA.length, ...data.map(dbToRow));
+  } catch(e) {
+    console.warn('DB load failed, using localStorage:', e);
+    loadFromStorage();
+  }
+}
+
+/* ── Auth ── */
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+  errEl.classList.add('hidden');
+  btn.textContent = 'Вхід…'; btn.disabled = true;
+
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+  btn.textContent = 'Увійти'; btn.disabled = false;
+
+  if (error) {
+    errEl.textContent = 'Невірний email або пароль';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const { data: roleData } = await _sb.from('user_roles').select('role').eq('user_id', data.user.id).single();
+  const role = roleData?.role || 'admin';
+  await loadCandidatesFromDB();
+  showDashboard(role, data.user.email);
+}
+
 /* ── Data ── */
 const MOCK_DATA = [
   { group_id:'G1', branch:'Київ', responsible:'Іванов О.', payment_type:'Готівка', payment_fee:500, registration_date:'2025-03-15', first_name:'Олександр', last_name:'Петренко', phone:'+380991234567', age:28, candidate_country:'Україна', vacancy_country:'Польща', project_name:'Amazon PL', partner_number:'P-001', arrival_date:'2026-04-10', transport:'Автобус', status_adm:'Доїхав', quality_submission:true,  payment_amount:15000, payment_status:'Виплачено',    comments:[] },
@@ -1022,7 +1143,7 @@ function renderTable() {
     }).join('');
 
     const delBtn = currentRole === 'head_admin'
-      ? `<button onclick="event.stopPropagation()" class="text-red-400 hover:text-red-600 ml-1" title="Видалити">
+      ? `<button onclick="event.stopPropagation();deleteCandidate(${origIdx})" class="text-red-400 hover:text-red-600 ml-1" title="Видалити">
            <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
          </button>` : '';
 
@@ -1314,10 +1435,11 @@ function addComment() {
   if (!text) return;
   const now  = new Date();
   const time = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
-  MOCK_DATA[dcIdx].comments.push({ author:'admin@example.com', time, text });
+  const row = MOCK_DATA[dcIdx];
+  row.comments.push({ author: document.getElementById('header-email').textContent || 'admin', time, text });
   input.value = '';
-  renderComments(MOCK_DATA[dcIdx]);
-  persist();
+  renderComments(row);
+  persist(row);
 }
 
 /* ── Tabs ── */
@@ -1990,25 +2112,37 @@ function calNext()  { calMonth++; if (calMonth > 11) { calMonth = 0;  calYear++;
 function calToday() { calYear = new Date().getFullYear(); calMonth = new Date().getMonth(); renderCalendar(); }
 
 /* ── Auth ── */
-function showDashboard(role) {
+function showDashboard(role, email) {
   currentRole = role;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = '';
-  document.getElementById('role-badge').textContent = ROLE_LABELS[role];
+  document.getElementById('role-badge').textContent = ROLE_LABELS[role] || role;
+  if (email) document.getElementById('header-email').textContent = email;
   renderTable();
 }
-function showLogin() {
+async function showLogin() {
+  await _sb.auth.signOut();
   document.getElementById('login-screen').style.display = '';
   document.getElementById('dashboard').style.display = 'none';
 }
 function showAddModal() { document.getElementById('add-modal').style.display = ''; }
 function hideAddModal() { document.getElementById('add-modal').style.display = 'none'; }
 
-/* ── Persistence (localStorage) ── */
+function deleteCandidate(idx) {
+  if (!confirm('Видалити кандидата?')) return;
+  const row = MOCK_DATA[idx];
+  deleteRowFromDB(row._db_id);
+  MOCK_DATA.splice(idx, 1);
+  persist();
+  renderTable();
+}
+
+/* ── Persistence ── */
 const STORAGE_KEY = 'crm_data_v1';
 
-function persist() {
+function persist(changedRow) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATA)); } catch(e) {}
+  if (changedRow) syncRowToDB(changedRow); // fire & forget
 }
 
 function loadFromStorage() {
@@ -2038,10 +2172,23 @@ function initStatusDropdowns() {
   });
 }
 
-loadFromStorage();
+/* ── Init ── */
 loadVacancies();
 initStatusDropdowns();
-renderTable();
+
+(async () => {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    const { data: roleData } = await _sb.from('user_roles')
+      .select('role').eq('user_id', session.user.id).single();
+    const role = roleData?.role || 'admin';
+    await loadCandidatesFromDB();
+    showDashboard(role, session.user.email);
+  } else {
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+})();
 </script>
 </body>
 </html>
