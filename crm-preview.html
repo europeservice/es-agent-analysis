@@ -254,8 +254,19 @@
 </head>
 <body class="bg-slate-100 text-gray-900">
 
+<!-- ══════════ LOADING SPLASH ══════════ -->
+<div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-gray-100 z-[999]">
+  <div class="flex flex-col items-center gap-3">
+    <svg class="animate-spin w-10 h-10 text-blue-600" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+    </svg>
+    <span class="text-sm text-gray-500 font-medium">Завантаження…</span>
+  </div>
+</div>
+
 <!-- ══════════ LOGIN ══════════ -->
-<div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
+<div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100" style="display:none">
   <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
     <h1 class="text-2xl font-bold text-center mb-2">CRM EuropeService</h1>
     <p class="text-center text-gray-400 text-sm mb-6">Увійдіть у свій акаунт</p>
@@ -281,7 +292,7 @@
 </div>
 
 <!-- ══════════ DASHBOARD ══════════ -->
-<div id="dashboard" class="min-h-screen">
+<div id="dashboard" class="min-h-screen" style="display:none">
   <header class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-full mx-auto px-6 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
@@ -2265,8 +2276,8 @@ initStatusDropdowns();
     showDashboard(role, session.user.email);
   } else {
     document.getElementById('login-screen').style.display = '';
-    document.getElementById('dashboard').style.display = 'none';
   }
+  document.getElementById('loading-screen').style.display = 'none';
 })();
 </script>
 </body>
