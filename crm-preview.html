@@ -706,7 +706,7 @@
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна кандидата</label><input id="am-cand-country" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Країна вакансії</label><input id="am-vac-country" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Назва проекту</label><input id="am-project" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
-      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вид оплати</label><input id="am-payment-type" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
+      <div><label class="block text-xs font-medium text-gray-400 mb-1">Вид оплати</label><select id="am-payment-type" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"><option value="">—</option><option>Платно</option><option>Кауція</option><option>Безкоштовно</option><option>Оплата по приїзду</option><option>Оплата з зп</option></select></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Сума оплати</label><input id="am-payment-amount" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Дата заїзду</label><input id="am-arrival-date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"/></div>
       <div><label class="block text-xs font-medium text-gray-400 mb-1">Статус (Adm)</label><select id="modal-status" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"></select></div>
@@ -866,8 +866,39 @@
       <div class="field-group" id="dc-finance-block">
         <div class="field-group-header">Фінанси</div>
         <div class="field-row">
+          <span class="field-label">Вид послуги</span>
+          <input class="field-input" data-key="service_type" type="text"/>
+        </div>
+        <div class="field-row">
           <span class="field-label">Вид оплати</span>
-          <input class="field-input" data-key="payment_type" type="text"/>
+          <select class="field-select" data-key="payment_type">
+            <option value="">—</option>
+            <option>Платно</option>
+            <option>Кауція</option>
+            <option>Безкоштовно</option>
+            <option>Оплата по приїзду</option>
+            <option>Оплата з зп</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Реквізити</span>
+          <select class="field-select" data-key="payment_requisites">
+            <option value="">—</option>
+            <option>ФОП Литвин</option>
+            <option>ФОП Курасов</option>
+            <option>ФОП Лисун</option>
+            <option>Оплата на сайті</option>
+            <option>Картка Котов ПУМБ</option>
+            <option>Картка Лисун Райфайзен</option>
+            <option>Польські реквізити</option>
+            <option>готівка</option>
+            <option>Карта директора</option>
+            <option>ТОВ "Європа Сервіс Україна"</option>
+            <option>Котов Монобанк</option>
+            <option>ФОП Котов А.П.</option>
+            <option>Котов ПриватБанк</option>
+            <option>ФОП Тестов</option>
+          </select>
         </div>
         <div class="field-row">
           <span class="field-label">Сума оплати</span>
@@ -884,6 +915,16 @@
             <option>Очікує</option>
             <option>Виплачено</option>
           </select>
+        </div>
+        <!-- Квитанція upload -->
+        <div class="p-3 border-t border-gray-100">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Квитанція</div>
+          <div id="dc-receipt-preview" class="flex flex-wrap gap-2 mb-2"></div>
+          <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-colors text-sm text-gray-500 hover:text-blue-600">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Завантажити фото квитанції
+            <input type="file" accept="image/*,application/pdf" multiple class="hidden" onchange="handleReceiptUpload(this)"/>
+          </label>
         </div>
       </div>
 
@@ -943,34 +984,41 @@ const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ── DB mapping ── */
 function dbToRow(r) {
+  const pd = r.personal_details || {};
   return {
-    _db_id:           r.id,
-    group_id:         r.group_id         || null,
-    branch:           r.branch           || '',
-    responsible:      r.responsible      || '',
-    payment_type:     r.payment_type     || '',
-    payment_fee:      r.payment_fee      ?? null,
-    registration_date:r.registration_date|| '',
-    first_name:       r.first_name       || '',
-    last_name:        r.last_name        || '',
-    phone:            r.phone            || '',
-    age:              r.age              ?? null,
-    candidate_country:r.candidate_country|| '',
-    vacancy_country:  r.vacancy_country  || '',
-    project_name:     r.project_name     || '',
-    partner_number:   r.partner_number   || '',
-    arrival_date:     r.arrival_date     || null,
-    transport:        r.transport        || '',
-    status_adm:       r.status_adm       || 'Зареєстровано',
-    quality_submission:!!r.quality_submission,
-    payment_amount:   r.payment_amount   ?? null,
-    payment_status:   r.payment_status   || 'Не виплачено',
-    comments:         Array.isArray(r.comments) ? r.comments : [],
-    personal_details: r.personal_details     || {},
+    _db_id:             r.id,
+    group_id:           r.group_id          || null,
+    branch:             r.branch            || '',
+    responsible:        r.responsible       || '',
+    payment_type:       r.payment_type      || '',
+    payment_fee:        r.payment_fee       ?? null,
+    registration_date:  r.registration_date || '',
+    first_name:         r.first_name        || '',
+    last_name:          r.last_name         || '',
+    phone:              r.phone             || '',
+    age:                r.age               ?? null,
+    candidate_country:  r.candidate_country || '',
+    vacancy_country:    r.vacancy_country   || '',
+    project_name:       r.project_name      || '',
+    partner_number:     r.partner_number    || '',
+    arrival_date:       r.arrival_date      || null,
+    transport:          r.transport         || '',
+    status_adm:         r.status_adm        || 'Зареєстровано',
+    quality_submission: !!r.quality_submission,
+    payment_amount:     r.payment_amount    ?? null,
+    payment_status:     r.payment_status    || 'Не виплачено',
+    service_type:       pd.service_type       || '',
+    payment_requisites: pd.payment_requisites || '',
+    comments:           Array.isArray(r.comments) ? r.comments : [],
+    personal_details:   pd,
   };
 }
 
 function rowToDb(row) {
+  // Sync virtual top-level fields back into personal_details before saving
+  const pd = { ...(row.personal_details || {}) };
+  if (row.service_type)       pd.service_type       = row.service_type;
+  if (row.payment_requisites) pd.payment_requisites = row.payment_requisites;
   return {
     group_id:          row.group_id          || null,
     branch:            row.branch            || null,
@@ -993,7 +1041,7 @@ function rowToDb(row) {
     payment_amount:    row.payment_amount    ?? null,
     payment_status:    row.payment_status    || 'Не виплачено',
     comments:          row.comments          || [],
-    personal_details:  row.personal_details  || {},
+    personal_details:  pd,
   };
 }
 
@@ -1115,6 +1163,8 @@ const ALL_COLS = [
   { key:'branch',             label:'Філія',              width:100 },
   { key:'responsible',        label:'Відповідальний',     width:130 },
   { key:'payment_type',       label:'Вид оплати',         width:110 },
+  { key:'payment_requisites', label:'Реквізити',          width:150 },
+  { key:'service_type',       label:'Вид послуги',        width:160 },
   { key:'payment_fee',        label:'Сума оплати',        width:110 },
   { key:'registration_date',  label:'Дата реєстрації',    width:130 },
   { key:'first_name',         label:"Ім'я",               width:100 },
@@ -1144,7 +1194,8 @@ const COL_SELECTS = {
   status_adm:         STATUSES,
   quality_submission: ['Так','Ні'],
   payment_status:     ['Не виплачено','Очікує','Виплачено'],
-  payment_type:       ['Готівка','Безготівка'],
+  payment_type:       ['Платно','Кауція','Безкоштовно','Оплата по приїзду','Оплата з зп'],
+  payment_requisites: ['ФОП Литвин','ФОП Курасов','ФОП Лисун','Оплата на сайті','Картка Котов ПУМБ','Картка Лисун Райфайзен','Польські реквізити','готівка','Карта директора','ТОВ "Європа Сервіс Україна"','Котов Монобанк','ФОП Котов А.П.','Котов ПриватБанк','ФОП Тестов'],
   branch:             ['Київ','Одеса','Рівне','Житомир','ES Partners'],
 };
 
@@ -1531,6 +1582,9 @@ function openDealCard(idx) {
     el.value = pd[el.dataset.mgr] || '';
   });
 
+  // Receipts
+  renderReceiptPreview(pd.receipts || []);
+
   // Finance block visibility
   document.getElementById('dc-finance-block').style.display = currentRole === 'admin' ? 'none' : '';
 
@@ -1594,6 +1648,11 @@ function saveDealCard() {
     const k = el.dataset.mgr;
     if (el.value.trim()) pd[k] = el.value.trim(); else delete pd[k];
   });
+  // Keep personal_details in sync with virtual top-level fields
+  if (row.service_type)       pd.service_type       = row.service_type;
+  else                        delete pd.service_type;
+  if (row.payment_requisites) pd.payment_requisites = row.payment_requisites;
+  else                        delete pd.payment_requisites;
   row.personal_details = pd;
   persist(row);
   renderTable();
@@ -2652,7 +2711,10 @@ async function saveNewCandidate() {
     quality_submission: qualityVal === 'true',
     payment_amount:    document.getElementById('am-payment-amount').value ? parseFloat(document.getElementById('am-payment-amount').value) : null,
     payment_status:    'Не виплачено',
+    service_type:      '',
+    payment_requisites:'',
     comments:          [],
+    personal_details:  {},
   };
 
   try {
@@ -2683,6 +2745,58 @@ function deleteCandidate(idx) {
 
 /* ── Persistence ── */
 const STORAGE_KEY = 'crm_data_v1';
+
+function renderReceiptPreview(receipts) {
+  const el = document.getElementById('dc-receipt-preview');
+  if (!el) return;
+  el.innerHTML = (receipts || []).map((r, i) => `
+    <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 group">
+      <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <a href="${escapeHtml(r.url)}" target="_blank" class="hover:underline truncate max-w-[120px]">${escapeHtml(r.name)}</a>
+      <button onclick="deleteReceipt(${i})" class="ml-1 text-gray-300 hover:text-red-500 transition-colors" title="Видалити">✕</button>
+    </div>
+  `).join('');
+}
+
+async function handleReceiptUpload(input) {
+  const row = dcIdx !== null ? MOCK_DATA[dcIdx] : null;
+  if (!row) return;
+  const pd = row.personal_details || {};
+  if (!pd.receipts) pd.receipts = [];
+
+  const statusEl = document.getElementById('dc-receipt-preview').parentElement;
+  for (const file of Array.from(input.files)) {
+    const path = `receipts/${row._db_id || 'tmp_' + Date.now()}/${Date.now()}_${file.name}`;
+    try {
+      const { error } = await _sb.storage.from('receipts').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = _sb.storage.from('receipts').getPublicUrl(path);
+      pd.receipts.push({ name: file.name, url: urlData.publicUrl, path });
+    } catch(e) {
+      alert('Помилка завантаження файлу: ' + (e.message || e));
+    }
+  }
+
+  row.personal_details = pd;
+  renderReceiptPreview(pd.receipts);
+  persist(row);
+  input.value = '';
+}
+
+function deleteReceipt(idx) {
+  const row = dcIdx !== null ? MOCK_DATA[dcIdx] : null;
+  if (!row) return;
+  const pd = row.personal_details || {};
+  const receipts = pd.receipts || [];
+  const removed = receipts.splice(idx, 1)[0];
+  // Try to remove from storage (fire & forget)
+  if (removed && removed.path) {
+    _sb.storage.from('receipts').remove([removed.path]).catch(() => {});
+  }
+  row.personal_details = pd;
+  renderReceiptPreview(pd.receipts);
+  persist(row);
+}
 
 function persist(changedRow) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATA)); } catch(e) {}
@@ -2717,6 +2831,8 @@ const BX_WEBHOOK = 'https://europeservice.org.ua/rest/1/z3f1myjhkqgy42hc/';
 const BX_CAND_COUNTRY = {'2221':'Україна','2222':'Чехія','2223':'Польща','2430':'Румунія','2591':'Литва','2835':'Словаччина','2836':'Нідерланди','2837':'Угорщина','2838':'Німеччина','2839':'інше'};
 const BX_VAC_COUNTRY  = {'2805':'Польща','2806':'Чехія','2807':'Литва','2808':'Румунія','2809':'Німеччина','2810':'Угорщина','2811':'Словаччина','2812':'Нідерланди','2813':'Греція','2814':'Англія','4609':'Іспанія','4904':'Латвія','4978':'Франція','5000':'Італія','5248':'Хорватія'};
 const BX_TRANSPORT    = {'2572':'Самостійно','2573':'Перевізник партнера','2574':'Перевізник ES','4882':'Рейсовий автобус'};
+const BX_PAYMENT_TYPE = {'2792':'Платно','2793':'Кауція','2794':'Безкоштовно','2845':'Оплата по приїзду','2846':'Оплата з зп'};
+const BX_REQUISITES   = {'4500':'ФОП Литвин','2789':'ФОП Курасов','2716':'ФОП Лисун','2712':'Оплата на сайті','4887':'Картка Котов ПУМБ','4886':'Картка Лисун Райфайзен','2847':'Польські реквізити','2231':'готівка','2833':'Карта директора','2230':'ТОВ "Європа Сервіс Україна"','2229':'Котов Монобанк','2227':'ФОП Котов А.П.','2228':'Котов ПриватБанк','5246':'ФОП Тестов'};
 
 async function bxCall(method, params = {}) {
   const url = new URL(BX_WEBHOOK + method + '.json');
@@ -2743,7 +2859,7 @@ async function bxCallPost(method, body = {}) {
   return json;
 }
 
-// Fetch only users that appear in the given deals → Map(id → "Ім'я Прізвище")
+// Fetch only users that appear in the given deals → Map(id → userObject)
 async function bxFetchUsersForDeals(deals) {
   const map = new Map();
   const ids = [...new Set(deals.map(d => d.ASSIGNED_BY_ID).filter(Boolean))];
@@ -2755,10 +2871,31 @@ async function bxFetchUsersForDeals(deals) {
     batch.forEach((id, idx) => { params[`ID[${idx}]`] = id; });
     try {
       const res = await bxCall('user.get', params);
-      (res.result || []).forEach(u => map.set(String(u.ID), `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim()));
+      (res.result || []).forEach(u => map.set(String(u.ID), u));
     } catch(e) { console.warn('BX user fetch:', e); }
   }
   return map;
+}
+
+// Helper: get display name from user object in _bxUserMap
+function bxUserName(userMap, id) {
+  const u = userMap ? userMap.get(String(id)) : null;
+  if (!u) return '';
+  return `${u.NAME || ''} ${u.LAST_NAME || ''}`.trim();
+}
+
+// Fetch product rows for a deal → { service_type: string, payment_amount: number }
+async function bxFetchProductRows(dealId) {
+  try {
+    const res = await bxCall('crm.deal.productrows.get', { id: dealId });
+    const rows = res.result || [];
+    const serviceType = rows.map(p => p.PRODUCT_NAME).filter(Boolean).join(', ');
+    const amount = rows.reduce((sum, p) => sum + (parseFloat(p.PRICE) || 0) * (parseFloat(p.QUANTITY) || 1), 0);
+    return { service_type: serviceType, payment_amount: amount || null };
+  } catch(e) {
+    console.warn('BX product rows fetch:', dealId, e);
+    return { service_type: '', payment_amount: null };
+  }
 }
 
 // Fetch all deals in stage C3:1 with all required fields
@@ -2771,7 +2908,8 @@ async function bxFetchAllDeals() {
                'UF_CRM_1583938977868','UF_CRM_5E0E157BC1687',
                'UF_CRM_5E68F54E6A529','UF_CRM_5E68F54E7DAFD',
                'UF_CRM_1599049456837','UF_CRM_1652443508655',
-               'UF_CRM_1621259911012','UF_CRM_1622814641187'],
+               'UF_CRM_1621259911012','UF_CRM_1622814641187',
+               'UF_CRM_1648455313042','UF_CRM_1599226724392'],
       FILTER: { STAGE_ID: 'C3:1' },
       START: start,
     });
@@ -2818,7 +2956,8 @@ function calcAge(dateStr) {
 }
 
 // Map Bitrix contact + deal → CRM row (no _db_id yet)
-function bxMapRow(contact, deal, groupId, userMap, partnerMap) {
+// productData: { service_type, payment_amount } from bxFetchProductRows
+function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData) {
   const c = contact;
   const phones = c.PHONE || [];
   const phone = phones[0] ? phones[0].VALUE : '';
@@ -2844,14 +2983,31 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap) {
   const vacCountry   = BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)]  || '';
   const transport    = BX_TRANSPORT[String(deal.UF_CRM_1622814641187)]     || '';
   const partnerNum   = partnerMap[String(deal.UF_CRM_1621259911012)]       || '';
-  const responsible  = userMap ? (userMap.get(String(deal.ASSIGNED_BY_ID)) || '') : '';
+  const paymentType  = BX_PAYMENT_TYPE[String(deal.UF_CRM_1648455313042)] || '';
+  const requisites   = BX_REQUISITES[String(deal.UF_CRM_1599226724392)]   || '';
+
+  // User object → name, branch, phone
+  const userObj        = userMap ? userMap.get(String(deal.ASSIGNED_BY_ID)) : null;
+  const responsible    = userObj ? `${userObj.NAME || ''} ${userObj.LAST_NAME || ''}`.trim() : '';
+  const branch         = userObj ? (userObj.WORK_POSITION || '') : '';
+  const respPhone      = userObj ? (userObj.WORK_PHONE || userObj.PERSONAL_PHONE || '') : '';
+
+  // Product rows data
+  const serviceType    = (productData && productData.service_type)  || '';
+  const paymentAmount  = (productData && productData.payment_amount) != null
+    ? productData.payment_amount
+    : (deal.UF_CRM_5E68F54E7DAFD ? parseFloat(deal.UF_CRM_5E68F54E7DAFD) : null);
+
+  pd.responsible_phone  = respPhone;
+  pd.service_type       = serviceType;
+  pd.payment_requisites = requisites;
 
   return {
     _db_id:            null,
     group_id:          groupId,
-    branch:            '',
+    branch:            branch,
     responsible:       responsible,
-    payment_type:      '',
+    payment_type:      paymentType,
     payment_fee:       deal.UF_CRM_5E68F54E6A529 ? parseFloat(deal.UF_CRM_5E68F54E6A529) : null,
     registration_date: deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '',
     first_name:        c.NAME      || '',
@@ -2866,8 +3022,10 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap) {
     transport:         transport,
     status_adm:        'Подано на реєстрацію',
     quality_submission: false,
-    payment_amount:    deal.UF_CRM_5E68F54E7DAFD ? parseFloat(deal.UF_CRM_5E68F54E7DAFD) : null,
+    payment_amount:    paymentAmount,
     payment_status:    'Не виплачено',
+    service_type:      serviceType,
+    payment_requisites: requisites,
     comments:          [],
     personal_details:  pd,
   };
@@ -2964,7 +3122,7 @@ function bxRenderDealList() {
     const project  = (deal.UF_CRM_5E0E157BC1687 || '').trim();
     const country  = BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)] || '';
     const flag     = BX_COUNTRY_FLAG[country] || '';
-    const manager  = _bxUserMap ? (_bxUserMap.get(String(deal.ASSIGNED_BY_ID)) || '') : '';
+    const manager  = bxUserName(_bxUserMap, deal.ASSIGNED_BY_ID);
     const regDate  = bxFmtDate(deal.BEGINDATE);
     const arrDate  = deal.UF_CRM_1583938977868 ? bxFmtDate(deal.UF_CRM_1583938977868) : '';
     const isGroup  = names.length > 1;
@@ -3028,13 +3186,16 @@ async function bxImportSelected() {
 
   for (const deal of selectedDeals) {
     try {
-      // 1. Get linked contacts
-      const contactsRes = await bxCall('crm.deal.contact.items.get', { id: deal.ID });
+      // 1. Fetch contacts + product rows in parallel
+      const [contactsRes, productData] = await Promise.all([
+        bxCall('crm.deal.contact.items.get', { id: deal.ID }),
+        bxFetchProductRows(deal.ID),
+      ]);
       const contactLinks = contactsRes.result || [];
 
       if (!contactLinks.length) {
         // No contacts — import deal only with empty contact fields
-        const row = bxMapRow({}, deal, null, _bxUserMap, _bxPartnerMap);
+        const row = bxMapRow({}, deal, null, _bxUserMap, _bxPartnerMap, productData);
         row.first_name = deal.TITLE || '';
         row.last_name = '';
         const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
@@ -3052,7 +3213,7 @@ async function bxImportSelected() {
       for (const link of contactLinks) {
         const contactRes = await bxCall('crm.contact.get', { id: link.CONTACT_ID });
         const contact = contactRes.result || {};
-        const row = bxMapRow(contact, deal, groupId, _bxUserMap, _bxPartnerMap);
+        const row = bxMapRow(contact, deal, groupId, _bxUserMap, _bxPartnerMap, productData);
         const { data, error } = await _sb.from('candidates').insert(rowToDb(row)).select('id').single();
         if (!error && data) { row._db_id = data.id; MOCK_DATA.push(row); imported++; }
         else { console.warn('Insert error:', error); failed++; }
