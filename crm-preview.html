@@ -101,6 +101,13 @@
     }
     .ms-option:hover { background: #f1f5f9; }
     .ms-option input[type=checkbox] { accent-color: #3b82f6; width: 13px; height: 13px; cursor: pointer; }
+    .ms-controls { display: flex; align-items: center; gap: 4px; padding: 6px 10px 4px; }
+    .ms-ctrl-btn { font-size: 11px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; padding: 0; }
+    .ms-ctrl-btn:hover { text-decoration: underline; }
+    .ms-ctrl-btn.ms-ctrl-dim { color: #94a3b8; cursor: default; }
+    .ms-ctrl-btn.ms-ctrl-dim:hover { text-decoration: none; }
+    .ms-ctrl-sep { font-size: 11px; color: #cbd5e1; }
+    .ms-divider { height: 1px; background: #f1f5f9; margin: 2px 0 4px; }
 
     /* ── Drag & drop ── */
     .drag-handle { cursor: grab; color: #d1d5db; transition: color .15s; }
@@ -1184,6 +1191,14 @@ document.addEventListener('click', e => {
   if (_openMsKey && !e.target.closest('.ms-wrap')) closeMsDropdown();
 });
 
+function msSelectAll(key) {
+  setColFilter(key, [...COL_SELECTS[key]]);
+}
+
+function msClearAll(key) {
+  setColFilter(key, []);
+}
+
 function clearAllFilters() {
   columnFilters = {};
   document.querySelectorAll('.col-filter').forEach(el => el.value = '');
@@ -1223,7 +1238,9 @@ function renderTable() {
       if (COL_SELECTS[c.key]) {
         const sel = Array.isArray(val) ? val : [];
         const label = sel.length === 0 ? 'Всі' : sel.length === 1 ? sel[0] : `${sel.length} вибрано`;
-        const options = COL_SELECTS[c.key].map(o => `
+        const allOpts = COL_SELECTS[c.key];
+        const allSelected = sel.length === allOpts.length;
+        const options = allOpts.map(o => `
           <label class="ms-option">
             <input type="checkbox" ${sel.includes(o) ? 'checked' : ''}
               onchange="event.stopPropagation();toggleMsOption('${c.key}','${o}')"/>
@@ -1231,7 +1248,15 @@ function renderTable() {
           </label>`).join('');
         return `<th><div class="ms-wrap">
           <button class="ms-btn ${active}" onclick="event.stopPropagation();toggleMsDropdown('${c.key}',this)">${label}</button>
-          <div class="ms-dropdown" id="ms-dd-${c.key}">${options}</div>
+          <div class="ms-dropdown" id="ms-dd-${c.key}">
+            <div class="ms-controls">
+              <button onclick="event.stopPropagation();msSelectAll('${c.key}')" class="ms-ctrl-btn ${allSelected?'ms-ctrl-dim':''}">Вибрати всі</button>
+              <span class="ms-ctrl-sep">—</span>
+              <button onclick="event.stopPropagation();msClearAll('${c.key}')" class="ms-ctrl-btn ${!sel.length?'ms-ctrl-dim':''}">Очистити</button>
+            </div>
+            <div class="ms-divider"></div>
+            ${options}
+          </div>
         </div></th>`;
       }
       const type = (c.key === 'registration_date' || c.key === 'arrival_date') ? 'date' : 'text';
