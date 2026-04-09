@@ -106,6 +106,22 @@
     }
     .group-member-card:hover { background: #eff6ff; border-color: #93c5fd; }
 
+    /* ── Group mini pipeline ── */
+    .mini-pipeline-row { display:flex; align-items:center; gap:8px; min-width:0; }
+    .mini-pipeline-stages { display:flex; gap:2px; overflow-x:auto; flex:1; scrollbar-width:none; padding:2px 0; }
+    .mini-pipeline-stages::-webkit-scrollbar { display:none; }
+    .mini-stage {
+      display:flex; align-items:center; justify-content:center;
+      height:22px; padding:0 10px;
+      font-size:9px; font-weight:600; letter-spacing:.03em;
+      text-transform:uppercase; white-space:nowrap;
+      color:#94a3b8; background:#e2e8f0; border-radius:3px;
+      cursor:pointer; transition:background .15s, color .15s;
+      flex-shrink:0;
+    }
+    .mini-stage.active { background:#2563eb; color:#fff; }
+    .mini-stage.done   { background:#dbeafe; color:#2563eb; }
+
     /* ── Page nav tabs ── */
     .page-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all .15s; white-space: nowrap; }
     .page-tab:hover { color: #2563eb; }
@@ -654,6 +670,9 @@
 
   <!-- ── Pipeline stages ── -->
   <div class="pipeline-wrap shrink-0" id="dc-pipeline"></div>
+
+  <!-- ── Group pipelines (visible only when candidate is in a group) ── -->
+  <div id="dc-group-pipelines" class="hidden shrink-0 border-b border-gray-200 bg-gray-50 px-4 py-2 flex flex-col gap-1.5 overflow-x-auto"></div>
 
   <!-- ── Body ── -->
   <div class="flex flex-1 overflow-hidden">
@@ -1362,9 +1381,13 @@ function renderGroupBlock(row) {
       return `<option value="${g}" ${g === gid ? 'selected' : ''}>${gc.label}</option>`;
     }).join('');
 
+  const gpEl = document.getElementById('dc-group-pipelines');
+
   if (!gid) {
     noneEl.style.display = '';
     membersEl.innerHTML = '';
+    gpEl.classList.add('hidden');
+    gpEl.innerHTML = '';
     return;
   }
 
@@ -1402,6 +1425,33 @@ function renderGroupBlock(row) {
         </div>`;
       }).join('')}
     </div>`;
+
+  // ── Group pipelines strip (above content) ──
+  gpEl.classList.remove('hidden');
+  gpEl.innerHTML = members.map(({ r, i }) => {
+    const isCurrent = (i === dcIdx);
+    const curStageIdx = STATUSES.indexOf(r.status_adm);
+    const stages = STATUSES.map((s, si) => {
+      const cls = si < curStageIdx ? 'done' : si === curStageIdx ? 'active' : '';
+      return `<div class="mini-stage ${cls}" onclick="event.stopPropagation();setStageForMember(${i},'${s}')" title="${s}">${s}</div>`;
+    }).join('');
+    return `<div class="mini-pipeline-row">
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 cursor-pointer"
+           style="background:${isCurrent ? '#2563eb' : gc.bg};color:${isCurrent ? '#fff' : gc.text}"
+           onclick="openDealCard(${i})" title="${r.first_name} ${r.last_name}">
+        ${r.first_name.charAt(0)}${r.last_name.charAt(0)}
+      </div>
+      <div class="text-xs font-semibold text-gray-600 shrink-0 w-32 truncate cursor-pointer" onclick="openDealCard(${i})">${r.first_name} ${r.last_name}</div>
+      <div class="mini-pipeline-stages">${stages}</div>
+    </div>`;
+  }).join('');
+}
+
+function setStageForMember(idx, status) {
+  MOCK_DATA[idx].status_adm = status;
+  persist(MOCK_DATA[idx]);
+  renderGroupBlock(MOCK_DATA[dcIdx]);
+  if (idx === dcIdx) renderPipeline(status);
 }
 
 function toggleGroupEdit() {
