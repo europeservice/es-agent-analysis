@@ -2546,17 +2546,30 @@ loadVacancies();
 initStatusDropdowns();
 
 (async () => {
-  const { data: { session } } = await _sb.auth.getSession();
-  if (session) {
-    const { data: roleData } = await _sb.from('user_roles')
-      .select('role').eq('user_id', session.user.id).single();
-    const role = roleData?.role || 'admin';
-    await loadCandidatesFromDB();
-    showDashboard(role, session.user.email);
-  } else {
+  const hideLoading = () => document.getElementById('loading-screen').style.display = 'none';
+  const showLogin  = () => { document.getElementById('login-screen').style.display = ''; hideLoading(); };
+
+  // Timeout fallback: if init takes > 6s, show login
+  const timeout = setTimeout(showLogin, 6000);
+
+  try {
+    const { data: { session } } = await _sb.auth.getSession();
+    clearTimeout(timeout);
+    if (session) {
+      const { data: roleData } = await _sb.from('user_roles')
+        .select('role').eq('user_id', session.user.id).single();
+      const role = roleData?.role || 'admin';
+      await loadCandidatesFromDB();
+      showDashboard(role, session.user.email);
+    } else {
+      document.getElementById('login-screen').style.display = '';
+    }
+  } catch(e) {
+    clearTimeout(timeout);
+    console.warn('Init error:', e);
     document.getElementById('login-screen').style.display = '';
   }
-  document.getElementById('loading-screen').style.display = 'none';
+  hideLoading();
 })();
 </script>
 
