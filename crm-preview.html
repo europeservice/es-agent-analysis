@@ -1396,34 +1396,37 @@ function renderGroupBlock(row) {
   const headerGrpLabel = document.getElementById('dc-header-group-label');
   const grpTitleBadge  = document.getElementById('dc-group-title-badge');
 
-  // Always hide old single header and main pipeline — we render everything in headerGroup
-  headerSingle.classList.add('hidden');
-  pipeEl.style.display = 'none';
-  headerGroup.classList.remove('hidden');
-  headerGroup.style.display = 'flex';
-
   if (!gid) {
-    // Single candidate — one row in header
-    noneEl.style.display = '';
-    membersEl.innerHTML = '';
+    // Single candidate — restore original header + pipeline, show contact card in sidebar
+    headerSingle.classList.remove('hidden');
+    headerGroup.classList.add('hidden');
+    headerGroup.style.display = 'none';
     headerGrpLabel.classList.add('hidden');
     headerGrpLabel.style.display = 'none';
-    const r = row;
-    const curStageIdx = STATUSES.indexOf(r.status_adm);
-    const stages = STATUSES.map((s, si) => {
-      const cls = si < curStageIdx ? 'done' : si === curStageIdx ? 'active' : '';
-      return `<div class="mini-stage ${cls}" onclick="event.stopPropagation();setStageForSingle('${s}')" title="${s}">${s}</div>`;
-    }).join('');
-    const initials = (r.first_name||'?').charAt(0) + (r.last_name||'').charAt(0);
-    headerGroup.innerHTML = `<div class="mini-pipeline-row px-4 py-2 bg-blue-50">
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-blue-600 text-white">${initials}</div>
-      <div class="text-sm font-semibold text-blue-700 shrink-0 whitespace-nowrap" style="min-width:150px">${r.first_name||''} ${r.last_name||''}</div>
-      <div class="mini-pipeline-stages flex-1" onclick="event.stopPropagation()">${stages}</div>
+    pipeEl.style.display = '';
+
+    // Show contact card in sidebar
+    noneEl.style.display = 'none';
+    const sc = STATUS_COLORS[row.status_adm] || '';
+    const badgeBg  = sc.includes('green') ? '#dcfce7' : sc.includes('blue') ? '#dbeafe' : sc.includes('red') ? '#fee2e2' : sc.includes('yellow') ? '#fef9c3' : sc.includes('purple') ? '#f3e8ff' : '#f1f5f9';
+    const badgeTxt = sc.includes('green') ? '#15803d' : sc.includes('blue') ? '#1d4ed8' : sc.includes('red') ? '#b91c1c' : sc.includes('yellow') ? '#854d0e' : sc.includes('purple') ? '#7e22ce' : '#475569';
+    const initials = (row.first_name||'?').charAt(0) + (row.last_name||'').charAt(0);
+    membersEl.innerHTML = `<div class="group-member-card ring-2 ring-blue-400">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-blue-600 text-white">${initials}</div>
+      <div class="min-w-0 flex-1">
+        <div class="text-sm font-semibold text-gray-800 truncate">${row.first_name||''} ${row.last_name||''}</div>
+        <span class="inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full"
+              style="background:${badgeBg};color:${badgeTxt}">${row.status_adm}</span>
+      </div>
     </div>`;
     return;
   }
 
   // Group mode
+  pipeEl.style.display = 'none';
+  headerSingle.classList.add('hidden');
+  headerGroup.classList.remove('hidden');
+  headerGroup.style.display = 'flex';
   headerGrpLabel.classList.remove('hidden');
   headerGrpLabel.style.display = 'flex';
   const gc2 = getGroupColor(gid);
