@@ -1294,6 +1294,31 @@ function openDealCard(idx) {
   // Pipeline
   buildPipeline(row.status_adm);
 
+  // Single candidate header row (avatar + name + pipeline)
+  if (!row.group_id) {
+    const headerSingle = document.getElementById('dc-header-single');
+    const headerGroup  = document.getElementById('dc-header-group');
+    const headerGrpLabel = document.getElementById('dc-header-group-label');
+    const pipeEl = document.getElementById('dc-pipeline');
+    headerSingle.classList.add('hidden');
+    headerGrpLabel.classList.add('hidden');
+    headerGrpLabel.style.display = 'none';
+    headerGroup.classList.remove('hidden');
+    headerGroup.style.display = 'flex';
+    pipeEl.style.display = 'none';
+    const curStageIdx = STATUSES.indexOf(row.status_adm);
+    const stages = STATUSES.map((s, si) => {
+      const cls = si < curStageIdx ? 'done' : si === curStageIdx ? 'active' : '';
+      return `<div class="mini-stage ${cls}" onclick="event.stopPropagation();setStageForSingle('${s}')" title="${s}">${s}</div>`;
+    }).join('');
+    const initials = (row.first_name||'?').charAt(0) + (row.last_name||'').charAt(0);
+    headerGroup.innerHTML = `<div class="mini-pipeline-row px-4 py-2 bg-blue-50">
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-blue-600 text-white">${initials}</div>
+      <div class="text-sm font-semibold text-blue-700 shrink-0 whitespace-nowrap" style="min-width:150px">${row.first_name||''} ${row.last_name||''}</div>
+      <div class="mini-pipeline-stages flex-1" onclick="event.stopPropagation()">${stages}</div>
+    </div>`;
+  }
+
   // Fill sidebar fields
   document.querySelectorAll('#deal-card [data-key]').forEach(el => {
     const k = el.dataset.key;
@@ -1477,6 +1502,13 @@ function renderGroupBlock(row) {
       <div class="mini-pipeline-stages flex-1" onclick="event.stopPropagation()">${stages}</div>
     </div>`;
   }).join('');
+}
+
+function setStageForSingle(status) {
+  if (dcIdx === null) return;
+  MOCK_DATA[dcIdx].status_adm = status;
+  persist(MOCK_DATA[dcIdx]);
+  openDealCard(dcIdx); // re-render header with updated stage
 }
 
 function setStageForMember(idx, status) {
