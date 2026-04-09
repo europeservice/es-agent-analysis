@@ -227,6 +227,13 @@ exports.handler = async (event) => {
     // ── 2. Fetch deal and verify stage ───────────────────────────────────
     const deal = await bxGet('crm.deal.get', { id: dealId });
     if (!deal) return respond(404, { error: 'deal not found' });
+
+    // Log all UF_ fields to help discover field IDs (e.g. "Назва вакансії")
+    const ufFields = Object.entries(deal)
+      .filter(([k, v]) => k.startsWith('UF_') && v)
+      .map(([k, v]) => `${k}=${v}`);
+    console.log(`[bx-webhook] deal ${dealId} UF fields:`, ufFields.join(' | '));
+
     if (deal.STAGE_ID !== 'C3:1') {
       return respond(200, { skipped: true, reason: `stage is ${deal.STAGE_ID}, expected C3:1` });
     }
