@@ -645,15 +645,19 @@
 <div id="deal-card">
 
   <!-- ── Top header ── -->
-  <div class="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 shrink-0">
+  <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3 shrink-0">
     <button onclick="closeDealCard()"
       class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 text-xl leading-none shrink-0">&times;</button>
 
-    <div class="flex items-center gap-2 min-w-0">
+    <!-- Single candidate header (hidden for groups) -->
+    <div id="dc-header-single" class="flex items-center gap-2 min-w-0">
       <h1 id="dc-name" class="text-lg font-bold text-gray-900 truncate"></h1>
       <span class="text-gray-300">/</span>
       <span class="text-sm text-gray-400 whitespace-nowrap">Угода</span>
     </div>
+
+    <!-- Group header rows (shown instead of single for groups) -->
+    <div id="dc-header-group" class="hidden flex-1 flex flex-col gap-0.5 min-w-0 overflow-hidden"></div>
 
     <div class="ml-auto flex items-center gap-2 shrink-0">
       <!-- Phone -->
@@ -814,15 +818,6 @@
 
       <!-- Comment tab -->
       <div id="tab-comment" class="flex flex-col gap-4">
-
-        <!-- Group pipelines (shown only when candidate is in a group) -->
-        <div id="dc-group-pipelines" class="hidden bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div class="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Статус групи</span>
-          </div>
-          <div id="dc-group-pipelines-inner" class="divide-y divide-gray-50"></div>
-        </div>
 
         <!-- Input area -->
         <div class="bg-white rounded-xl border border-gray-200 p-4">
@@ -1388,20 +1383,23 @@ function renderGroupBlock(row) {
       return `<option value="${g}" ${g === gid ? 'selected' : ''}>${gc.label}</option>`;
     }).join('');
 
-  const gpEl    = document.getElementById('dc-group-pipelines');
-  const gpInner = document.getElementById('dc-group-pipelines-inner');
-  const pipeEl  = document.getElementById('dc-pipeline');
+  const pipeEl        = document.getElementById('dc-pipeline');
+  const headerSingle  = document.getElementById('dc-header-single');
+  const headerGroup   = document.getElementById('dc-header-group');
 
   if (!gid) {
     noneEl.style.display = '';
     membersEl.innerHTML = '';
-    gpEl.classList.add('hidden');
-    gpInner.innerHTML = '';
     pipeEl.style.display = '';
+    headerSingle.classList.remove('hidden');
+    headerGroup.classList.add('hidden');
+    headerGroup.innerHTML = '';
     return;
   }
-  // Hide the single-candidate top pipeline for group members
+  // Group mode: hide single pipeline & name, show group header rows
   pipeEl.style.display = 'none';
+  headerSingle.classList.add('hidden');
+  headerGroup.classList.remove('hidden');
 
   noneEl.style.display = 'none';
   const gc = getGroupColor(gid);
@@ -1438,21 +1436,19 @@ function renderGroupBlock(row) {
       }).join('')}
     </div>`;
 
-  // ── Group pipelines (inside comment tab, above comments) ──
-  gpEl.classList.remove('hidden');
-  gpInner.innerHTML = members.map(({ r, i }) => {
+  // ── Group header rows ──
+  headerGroup.innerHTML = members.map(({ r, i }) => {
     const isCurrent = (i === dcIdx);
     const curStageIdx = STATUSES.indexOf(r.status_adm);
     const stages = STATUSES.map((s, si) => {
       const cls = si < curStageIdx ? 'done' : si === curStageIdx ? 'active' : '';
       return `<div class="mini-stage ${cls}" onclick="event.stopPropagation();setStageForMember(${i},'${s}')" title="${s}">${s}</div>`;
     }).join('');
-    return `<div class="mini-pipeline-row px-3 py-2 ${isCurrent ? 'bg-blue-50' : ''}">
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 cursor-pointer"
-           style="background:${isCurrent ? '#2563eb' : gc.bg};color:${isCurrent ? '#fff' : gc.text}"
-           onclick="openDealCard(${i})" title="${r.first_name} ${r.last_name}">
-        ${r.first_name.charAt(0)}${r.last_name.charAt(0)}
-      </div>
+    return `<div class="mini-pipeline-row">
+      <div class="text-sm font-bold shrink-0 cursor-pointer hover:text-blue-600 transition-colors whitespace-nowrap"
+           style="color:${isCurrent ? '#2563eb' : '#374151'};min-width:160px"
+           onclick="openDealCard(${i})">${r.first_name} ${r.last_name}</div>
+      <span class="text-gray-200 shrink-0">/</span>
       <div class="mini-pipeline-stages">${stages}</div>
     </div>`;
   }).join('');
