@@ -1385,17 +1385,18 @@ function renderGroupBlock(row) {
       ${members.map(({ r, i }) => {
         const sc = STATUS_COLORS[r.status_adm] || '';
         const dotColor = sc.includes('green') ? '#22c55e' : sc.includes('blue') ? '#3b82f6' : sc.includes('red') ? '#ef4444' : sc.includes('yellow') ? '#f59e0b' : sc.includes('purple') ? '#a78bfa' : '#94a3b8';
-        return `<div class="group-member-card" onclick="openDealCard(${i})">
+        const badgeBg  = sc.includes('green') ? '#dcfce7' : sc.includes('blue') ? '#dbeafe' : sc.includes('red') ? '#fee2e2' : sc.includes('yellow') ? '#fef9c3' : sc.includes('purple') ? '#f3e8ff' : '#f1f5f9';
+        const badgeTxt = sc.includes('green') ? '#15803d' : sc.includes('blue') ? '#1d4ed8' : sc.includes('red') ? '#b91c1c' : sc.includes('yellow') ? '#854d0e' : sc.includes('purple') ? '#7e22ce' : '#475569';
+        const isCurrent = (i === dcIdx);
+        return `<div class="group-member-card${isCurrent ? ' ring-2 ring-blue-400' : ''}" onclick="openDealCard(${i})">
           <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
                style="background:${gc.bg};color:${gc.text}">
             ${r.first_name.charAt(0)}${r.last_name.charAt(0)}
           </div>
           <div class="min-w-0 flex-1">
             <div class="text-sm font-semibold text-gray-800 truncate">${r.first_name} ${r.last_name}</div>
-            <div class="flex items-center gap-1 mt-0.5">
-              <span class="w-2 h-2 rounded-full shrink-0" style="background:${dotColor}"></span>
-              <span class="text-xs text-gray-400 truncate">${r.status_adm}</span>
-            </div>
+            <span class="inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full truncate max-w-full"
+                  style="background:${badgeBg};color:${badgeTxt}">${r.status_adm}</span>
           </div>
           <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </div>`;
