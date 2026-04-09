@@ -79,6 +79,29 @@
     .col-filter:focus { border-color: #93c5fd; }
     .col-filter.active { border-color: #3b82f6; background: #eff6ff; }
 
+    /* ── Multi-select filter ── */
+    .ms-wrap { position: relative; }
+    .ms-btn {
+      width: 100%; font-size: 11px; padding: 3px 22px 3px 6px; border-radius: 5px;
+      border: 1px solid #e2e8f0; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 6px center;
+      color: #374151; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ms-btn.active { border-color: #3b82f6; background-color: #eff6ff; }
+    .ms-dropdown {
+      display: none; position: fixed; z-index: 200;
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12); min-width: 150px; max-height: 220px; overflow-y: auto;
+      padding: 4px 0;
+    }
+    .ms-dropdown.open { display: block; }
+    .ms-option {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 10px; font-size: 12px; color: #374151;
+      cursor: pointer; user-select: none; transition: background .1s;
+    }
+    .ms-option:hover { background: #f1f5f9; }
+    .ms-option input[type=checkbox] { accent-color: #3b82f6; width: 13px; height: 13px; cursor: pointer; }
+
     /* ── Drag & drop ── */
     .drag-handle { cursor: grab; color: #d1d5db; transition: color .15s; }
     .drag-handle:hover { color: #6b7280; }
@@ -1113,10 +1136,11 @@ const COL_SELECTS = {
 function applyFilters() {
   filteredIndices = MOCK_DATA.reduce((acc, row, i) => {
     const pass = Object.entries(columnFilters).every(([key, val]) => {
-      if (!val) return true;
+      if (!val || (Array.isArray(val) && !val.length)) return true;
       let cell = row[key];
       if (cell == null) return false;
       if (key === 'quality_submission') cell = cell ? 'Так' : 'Ні';
+      if (Array.isArray(val)) return val.includes(String(cell));
       return String(cell).toLowerCase().includes(val.toLowerCase());
     });
     if (pass) acc.push(i);
@@ -1125,10 +1149,40 @@ function applyFilters() {
 }
 
 function setColFilter(key, val) {
-  if (val) columnFilters[key] = val;
+  if (val && (!Array.isArray(val) || val.length)) columnFilters[key] = val;
   else delete columnFilters[key];
   renderTable();
 }
+
+function toggleMsOption(key, val) {
+  const cur = Array.isArray(columnFilters[key]) ? [...columnFilters[key]] : [];
+  const idx = cur.indexOf(val);
+  if (idx === -1) cur.push(val); else cur.splice(idx, 1);
+  setColFilter(key, cur);
+}
+
+let _openMsKey = null;
+function toggleMsDropdown(key, btnEl) {
+  if (_openMsKey && _openMsKey !== key) closeMsDropdown();
+  const dd = document.getElementById('ms-dd-' + key);
+  if (!dd) return;
+  if (dd.classList.contains('open')) { closeMsDropdown(); return; }
+  const rect = btnEl.getBoundingClientRect();
+  dd.style.top  = (rect.bottom + 2) + 'px';
+  dd.style.left = rect.left + 'px';
+  dd.classList.add('open');
+  _openMsKey = key;
+}
+function closeMsDropdown() {
+  if (_openMsKey) {
+    const dd = document.getElementById('ms-dd-' + _openMsKey);
+    if (dd) dd.classList.remove('open');
+    _openMsKey = null;
+  }
+}
+document.addEventListener('click', e => {
+  if (_openMsKey && !e.target.closest('.ms-wrap')) closeMsDropdown();
+});
 
 function clearAllFilters() {
   columnFilters = {};
@@ -1164,12 +1218,21 @@ function renderTable() {
     `<tr id="filter-row">` +
     `<th></th><th></th>` +
     cols.map(c => {
-      const val = columnFilters[c.key] || '';
-      const active = val ? 'active' : '';
+      const val = columnFilters[c.key];
+      const active = val && (!Array.isArray(val) || val.length) ? 'active' : '';
       if (COL_SELECTS[c.key]) {
-        const opts = `<option value="">Всі</option>` +
-          COL_SELECTS[c.key].map(o => `<option ${o===val?'selected':''}>${o}</option>`).join('');
-        return `<th><select class="col-filter ${active}" onchange="setColFilter('${c.key}',this.value)">${opts}</select></th>`;
+        const sel = Array.isArray(val) ? val : [];
+        const label = sel.length === 0 ? 'Всі' : sel.length === 1 ? sel[0] : `${sel.length} вибрано`;
+        const options = COL_SELECTS[c.key].map(o => `
+          <label class="ms-option">
+            <input type="checkbox" ${sel.includes(o) ? 'checked' : ''}
+              onchange="event.stopPropagation();toggleMsOption('${c.key}','${o}')"/>
+            ${o}
+          </label>`).join('');
+        return `<th><div class="ms-wrap">
+          <button class="ms-btn ${active}" onclick="event.stopPropagation();toggleMsDropdown('${c.key}',this)">${label}</button>
+          <div class="ms-dropdown" id="ms-dd-${c.key}">${options}</div>
+        </div></th>`;
       }
       const type = (c.key === 'registration_date' || c.key === 'arrival_date') ? 'date' : 'text';
       return `<th><input type="${type}" class="col-filter ${active}" value="${val}"
