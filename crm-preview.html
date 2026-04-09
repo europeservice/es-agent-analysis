@@ -2992,11 +2992,11 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData) {
   const branch         = userObj ? (userObj.WORK_POSITION || '') : '';
   const respPhone      = userObj ? (userObj.WORK_PHONE || userObj.PERSONAL_PHONE || '') : '';
 
-  // Product rows data
-  const serviceType    = (productData && productData.service_type)  || '';
-  const paymentAmount  = (productData && productData.payment_amount) != null
+  // Product rows data — amount goes to payment_fee (Сума оплати), NOT payment_amount (Сума виплати)
+  const serviceType    = (productData && productData.service_type) || '';
+  const paymentFee     = (productData && productData.payment_amount != null)
     ? productData.payment_amount
-    : (deal.UF_CRM_5E68F54E7DAFD ? parseFloat(deal.UF_CRM_5E68F54E7DAFD) : null);
+    : (deal.UF_CRM_5E68F54E6A529 ? parseFloat(deal.UF_CRM_5E68F54E6A529) : null);
 
   pd.responsible_phone  = respPhone;
   pd.service_type       = serviceType;
@@ -3008,7 +3008,7 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData) {
     branch:            branch,
     responsible:       responsible,
     payment_type:      paymentType,
-    payment_fee:       deal.UF_CRM_5E68F54E6A529 ? parseFloat(deal.UF_CRM_5E68F54E6A529) : null,
+    payment_fee:       paymentFee,
     registration_date: deal.BEGINDATE ? deal.BEGINDATE.split('T')[0] : '',
     first_name:        c.NAME      || '',
     last_name:         c.LAST_NAME || '',
@@ -3022,7 +3022,7 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData) {
     transport:         transport,
     status_adm:        'Подано на реєстрацію',
     quality_submission: false,
-    payment_amount:    paymentAmount,
+    payment_amount:    null,
     payment_status:    'Не виплачено',
     service_type:      serviceType,
     payment_requisites: requisites,
@@ -3184,6 +3184,18 @@ async function bxImportSelected() {
 
   let imported = 0, failed = 0;
 
+  // Compute next available G-number (G1, G2, …) across existing + newly imported rows
+  let _nextGNum = (() => {
+    let max = 0;
+    MOCK_DATA.forEach(r => {
+      if (r.group_id && /^G\d+$/.test(r.group_id)) {
+        const n = parseInt(r.group_id.slice(1));
+        if (n > max) max = n;
+      }
+    });
+    return max + 1;
+  })();
+
   for (const deal of selectedDeals) {
     try {
       // 1. Fetch contacts + product rows in parallel
@@ -3204,10 +3216,8 @@ async function bxImportSelected() {
         continue;
       }
 
-      // 2. Assign group_id if multi-contact deal
-      const groupId = contactLinks.length > 1
-        ? `bx_${deal.ID}_${Date.now()}`
-        : null;
+      // 2. Assign group_id if multi-contact deal (G12, G13, …)
+      const groupId = contactLinks.length > 1 ? `G${_nextGNum++}` : null;
 
       // 3. Fetch each contact and save
       for (const link of contactLinks) {
