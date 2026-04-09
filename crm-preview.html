@@ -1372,7 +1372,7 @@ function renderGroupBlock(row) {
   const gc = getGroupColor(gid);
   const members = MOCK_DATA
     .map((r, i) => ({ r, i }))
-    .filter(({ r, i }) => r.group_id === gid && i !== dcIdx);
+    .filter(({ r }) => r.group_id === gid);
 
   membersEl.innerHTML = `
     <div class="px-3 pt-2 pb-1">
