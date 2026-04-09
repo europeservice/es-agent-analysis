@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/"
+  to = "/crm-preview.html"
+  status = 302
