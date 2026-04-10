@@ -186,7 +186,7 @@ function buildRow({ contact = {}, deal, groupId, user, partnerMap, productData }
     age:               calcAge(contact.BIRTHDATE),
     candidate_country: BX_CAND_COUNTRY[String(deal.UF_CRM_1599049456837)] || null,
     vacancy_country:   BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)]  || null,
-    project_name:      (deal.UF_CRM_5E0E157BC1687 || '').trim() || null,
+    project_name:      (deal.UF_CRM_1697099459861 || deal.UF_CRM_5E0E157BC1687 || '').trim() || null,
     partner_number:    partnerMap[String(deal.UF_CRM_1621259911012)] || null,
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
     transport:         BX_TRANSPORT[String(deal.UF_CRM_1622814641187)] || null,

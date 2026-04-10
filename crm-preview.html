@@ -2909,7 +2909,8 @@ async function bxFetchAllDeals() {
                'UF_CRM_5E68F54E6A529','UF_CRM_5E68F54E7DAFD',
                'UF_CRM_1599049456837','UF_CRM_1652443508655',
                'UF_CRM_1621259911012','UF_CRM_1622814641187',
-               'UF_CRM_1648455313042','UF_CRM_1599226724392'],
+               'UF_CRM_1648455313042','UF_CRM_1599226724392',
+               'UF_CRM_1697099459861'],
       FILTER: { STAGE_ID: 'C3:1' },
       START: start,
     });
@@ -3016,7 +3017,7 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData) {
     age:               calcAge(c.BIRTHDATE),
     candidate_country: candCountry,
     vacancy_country:   vacCountry,
-    project_name:      (deal.UF_CRM_5E0E157BC1687 || '').trim(),
+    project_name:      (deal.UF_CRM_1697099459861 || deal.UF_CRM_5E0E157BC1687 || '').trim(),
     partner_number:    partnerNum,
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
     transport:         transport,
