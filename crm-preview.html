@@ -79,6 +79,19 @@
     .col-filter:focus { border-color: #93c5fd; }
     .col-filter.active { border-color: #3b82f6; background: #eff6ff; }
 
+    /* ── Inline cell editing ── */
+    .cell-input, .cell-select {
+      width: 100%; font-size: 12px; padding: 2px 5px;
+      border-radius: 4px; border: 1px solid transparent;
+      background: transparent; color: #374151;
+      outline: none; transition: border-color .12s, background .12s;
+      box-sizing: border-box;
+    }
+    .cell-input:hover, .cell-select:hover { border-color: #e2e8f0; background: #fff; }
+    .cell-input:focus, .cell-select:focus { border-color: #93c5fd; background: #fff; box-shadow: 0 0 0 2px rgba(147,197,253,.3); }
+    .cell-select { cursor: pointer; padding-right: 18px; }
+    td.cell-td { padding: 2px 4px; }
+
     /* ── Multi-select filter ── */
     .ms-wrap { position: relative; }
     .ms-btn {
@@ -1393,29 +1406,7 @@ function renderTable() {
            </button>
          </td>`;
 
-    const cells = cols.map(c => {
-      let v = row[c.key];
-      if (c.key === 'status_adm') {
-        const opts = STATUSES.map(s =>
-          `<option value="${s}" ${s===v?'selected':''}>${s}</option>`).join('');
-        return `<td class="px-2 py-1 whitespace-nowrap" onclick="event.stopPropagation()">
-          <select onchange="MOCK_DATA[${origIdx}].status_adm=this.value;renderTable()"
-            class="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white focus:ring-1 focus:ring-blue-400 cursor-pointer w-full">${opts}</select>
-        </td>`;
-      }
-      if (c.key === 'quality_submission') {
-        return `<td class="px-2 py-1 whitespace-nowrap" onclick="event.stopPropagation()">
-          <select onchange="MOCK_DATA[${origIdx}].quality_submission=this.value==='true';renderTable()"
-            class="text-xs border border-gray-200 rounded px-1 py-0.5 bg-white focus:ring-1 focus:ring-blue-400 cursor-pointer">
-            <option value="true"  ${v===true ?'selected':''}>Так</option>
-            <option value="false" ${v===false?'selected':''}>Ні</option>
-          </select>
-        </td>`;
-      }
-      if (v == null) v = '—';
-      else if (c.key === 'payment_amount' || c.key === 'payment_fee') v = Number(v).toLocaleString('uk-UA') + ' грн';
-      return `<td class="px-3 py-2 whitespace-nowrap text-sm">${v}</td>`;
-    }).join('');
+    const cells = cols.map(c => renderEditCell(c, row, origIdx)).join('');
 
     const delBtn = currentRole === 'head_admin'
       ? `<button onclick="event.stopPropagation();deleteCandidate(${origIdx})" class="text-red-400 hover:text-red-600 ml-1" title="Видалити">
@@ -3190,6 +3181,95 @@ function escapeHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Inline cell save ──────────────────────────────────────────────────────
+function saveCell(origIdx, key, rawValue) {
+  const row = MOCK_DATA[origIdx];
+  if (!row) return;
+  let value = rawValue;
+  if (key === 'quality_submission') {
+    value = rawValue === true || rawValue === 'true';
+  } else if (['age','payment_fee','payment_amount'].includes(key)) {
+    value = (rawValue === '' || rawValue == null) ? null : Number(rawValue);
+  } else {
+    value = (rawValue === '' || rawValue == null) ? null : rawValue;
+  }
+  if (row[key] === value) return; // no change
+  row[key] = value;
+  // Keep personal_details in sync for virtual fields
+  if (key === 'service_type' || key === 'payment_requisites') {
+    const pd = row.personal_details || {};
+    if (value) pd[key] = value; else delete pd[key];
+    row.personal_details = pd;
+  }
+  persist(row);
+  // Re-render only when visual row style changes
+  if (key === 'status_adm') renderTable();
+}
+
+// ── Render one editable table cell ───────────────────────────────────────
+function renderEditCell(c, row, origIdx) {
+  const raw = row[c.key];
+  const v   = (raw == null) ? '' : String(raw);
+  const esc = escapeHtml(v);
+
+  // status_adm — colored select (forces re-render)
+  if (c.key === 'status_adm') {
+    const opts = STATUSES.map(s =>
+      `<option value="${s}" ${s===raw?'selected':''}>${s}</option>`).join('');
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <select class="cell-select" onchange="saveCell(${origIdx},'status_adm',this.value)">
+        ${opts}</select></td>`;
+  }
+
+  // quality_submission — Yes/No select
+  if (c.key === 'quality_submission') {
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <select class="cell-select"
+        onchange="saveCell(${origIdx},'quality_submission',this.value)">
+        <option value="true"  ${raw===true ?'selected':''}>Так</option>
+        <option value="false" ${raw===false?'selected':''}>Ні</option>
+      </select></td>`;
+  }
+
+  // payment_status — strict select
+  if (c.key === 'payment_status') {
+    const opts = ['Не виплачено','Очікує','Виплачено'].map(o =>
+      `<option ${o===raw?'selected':''}>${o}</option>`).join('');
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <select class="cell-select" onchange="saveCell(${origIdx},'payment_status',this.value)">
+        ${opts}</select></td>`;
+  }
+
+  // Fields with predefined list → combobox (input + datalist = free text OR pick from list)
+  if (COL_SELECTS[c.key]) {
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <input class="cell-input" list="dl-${c.key}" value="${esc}"
+        onchange="saveCell(${origIdx},'${c.key}',this.value)"
+        onblur="saveCell(${origIdx},'${c.key}',this.value)"/></td>`;
+  }
+
+  // Date fields
+  if (c.key === 'registration_date' || c.key === 'arrival_date') {
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <input class="cell-input" type="date" value="${esc}"
+        onchange="saveCell(${origIdx},'${c.key}',this.value||null)"/></td>`;
+  }
+
+  // Number fields
+  if (['age','payment_fee','payment_amount'].includes(c.key)) {
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <input class="cell-input" type="number" value="${esc}" min="0"
+        onchange="saveCell(${origIdx},'${c.key}',this.value)"
+        onblur="saveCell(${origIdx},'${c.key}',this.value)"/></td>`;
+  }
+
+  // Default: text input
+  return `<td class="cell-td" onclick="event.stopPropagation()">
+    <input class="cell-input" type="text" value="${esc}"
+      onchange="saveCell(${origIdx},'${c.key}',this.value)"
+      onblur="saveCell(${origIdx},'${c.key}',this.value)"/></td>`;
+}
+
 async function bxImportSelected() {
   const cbs = Array.from(document.querySelectorAll('.bx-deal-cb')).filter(c => c.checked);
   if (!cbs.length) { alert('Оберіть хоча б одну угоду.'); return; }
@@ -3436,6 +3516,17 @@ initStatusDropdowns();
 </div>
 
 <!-- ══════════ BITRIX24 IMPORT MODAL ══════════ -->
+<!-- Datalists for combobox cells -->
+<div hidden>
+  <datalist id="dl-branch"><option>Київ</option><option>Одеса</option><option>Рівне</option><option>Житомир</option><option>ES Partners</option></datalist>
+  <datalist id="dl-payment_type"><option>Платно</option><option>Кауція</option><option>Безкоштовно</option><option>Оплата по приїзду</option><option>Оплата з зп</option></datalist>
+  <datalist id="dl-payment_requisites"><option>ФОП Литвин</option><option>ФОП Курасов</option><option>ФОП Лисун</option><option>Оплата на сайті</option><option>Картка Котов ПУМБ</option><option>Картка Лисун Райфайзен</option><option>Польські реквізити</option><option>готівка</option><option>Карта директора</option><option>ТОВ "Європа Сервіс Україна"</option><option>Котов Монобанк</option><option>ФОП Котов А.П.</option><option>Котов ПриватБанк</option><option>ФОП Тестов</option></datalist>
+  <datalist id="dl-candidate_country"><option>Україна</option><option>Польща</option><option>Чехія</option><option>Румунія</option><option>Литва</option><option>Словаччина</option><option>Нідерланди</option><option>Угорщина</option><option>Німеччина</option><option>інше</option></datalist>
+  <datalist id="dl-vacancy_country"><option>Польща</option><option>Чехія</option><option>Литва</option><option>Румунія</option><option>Німеччина</option><option>Угорщина</option><option>Словаччина</option><option>Нідерланди</option><option>Греція</option><option>Англія</option><option>Іспанія</option><option>Латвія</option><option>Франція</option><option>Італія</option><option>Хорватія</option></datalist>
+  <datalist id="dl-transport"><option>Самостійно</option><option>Перевізник партнера</option><option>Перевізник ES</option><option>Рейсовий автобус</option></datalist>
+  <datalist id="dl-service_type"></datalist>
+</div>
+
 <div id="bitrix-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" style="display:none">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
 
