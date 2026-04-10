@@ -3263,6 +3263,14 @@ function renderEditCell(c, row, origIdx) {
         onblur="saveCell(${origIdx},'${c.key}',this.value)"/></td>`;
   }
 
+  // Name fields → clickable link that opens deal card
+  if (c.key === 'first_name' || c.key === 'last_name') {
+    return `<td class="cell-td" onclick="event.stopPropagation()">
+      <button onclick="openDealCard(${origIdx})"
+        class="text-blue-600 hover:text-blue-800 hover:underline font-medium text-xs text-left w-full truncate"
+        title="Відкрити угоду">${esc || '—'}</button></td>`;
+  }
+
   // Default: text input
   return `<td class="cell-td" onclick="event.stopPropagation()">
     <input class="cell-input" type="text" value="${esc}"
