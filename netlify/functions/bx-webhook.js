@@ -112,6 +112,16 @@ async function fetchUser(userId) {
   }
 }
 
+async function fetchVacancyMap() {
+  const map = {};
+  try {
+    const fields = await bxPost('crm.deal.userfield.list', { FILTER: { FIELD_NAME: 'UF_CRM_1697099459861' } });
+    const field = (fields || [])[0];
+    if (field && field.LIST) field.LIST.forEach(item => { map[String(item.ID)] = item.VALUE; });
+  } catch (e) { console.warn('vacancyMap fetch failed:', e.message); }
+  return map;
+}
+
 async function fetchPartnerMap() {
   const map = {};
   try {
@@ -145,7 +155,7 @@ async function getNextGroupNum() {
   } catch { return 1; }
 }
 
-function buildRow({ contact = {}, deal, groupId, user, partnerMap, productData }) {
+function buildRow({ contact = {}, deal, groupId, user, partnerMap, vacancyMap, productData }) {
   const phones = contact.PHONE || [];
   const phone = phones[0] ? phones[0].VALUE : '';
   const pd = {};
@@ -186,7 +196,7 @@ function buildRow({ contact = {}, deal, groupId, user, partnerMap, productData }
     age:               calcAge(contact.BIRTHDATE),
     candidate_country: BX_CAND_COUNTRY[String(deal.UF_CRM_1599049456837)] || null,
     vacancy_country:   BX_VAC_COUNTRY[String(deal.UF_CRM_1652443508655)]  || null,
-    project_name:      (deal.UF_CRM_1697099459861 || deal.UF_CRM_5E0E157BC1687 || '').trim() || null,
+    project_name:      (vacancyMap && vacancyMap[String(deal.UF_CRM_1697099459861)]) || (deal.UF_CRM_1697099459861 || deal.UF_CRM_5E0E157BC1687 || '').trim() || null,
     partner_number:    partnerMap[String(deal.UF_CRM_1621259911012)] || null,
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
     transport:         BX_TRANSPORT[String(deal.UF_CRM_1622814641187)] || null,
@@ -244,11 +254,12 @@ exports.handler = async (event) => {
     }
 
     // ── 4. Fetch all supporting data in parallel ─────────────────────────
-    const [contactLinks, productData, user, partnerMap, nextGNum] = await Promise.all([
+    const [contactLinks, productData, user, partnerMap, vacancyMap, nextGNum] = await Promise.all([
       bxGet('crm.deal.contact.items.get', { id: dealId }),
       fetchProductData(dealId),
       fetchUser(deal.ASSIGNED_BY_ID),
       fetchPartnerMap(),
+      fetchVacancyMap(),
       getNextGroupNum(),
     ]);
 
@@ -258,14 +269,14 @@ exports.handler = async (event) => {
 
     // ── 5. Import contacts ───────────────────────────────────────────────
     if (!contacts.length) {
-      const row = buildRow({ deal, groupId: null, user, partnerMap, productData });
+      const row = buildRow({ deal, groupId: null, user, partnerMap, vacancyMap, productData });
       row.first_name = deal.TITLE || '';
       const saved = await sbInsert('candidates', row);
       inserted.push(saved.id);
     } else {
       for (const link of contacts) {
         const contact = await bxGet('crm.contact.get', { id: link.CONTACT_ID });
-        const row = buildRow({ contact, deal, groupId, user, partnerMap, productData });
+        const row = buildRow({ contact, deal, groupId, user, partnerMap, vacancyMap, productData });
         const saved = await sbInsert('candidates', row);
         inserted.push(saved.id);
       }
