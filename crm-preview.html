@@ -1130,15 +1130,33 @@ const MOCK_DATA = [
 ];
 
 /* ── Groups ── */
-const GROUP_PALETTE = {
-  'G1': { bg:'#dbeafe', border:'#3b82f6', text:'#1d4ed8', label:'Група G1' },
-  'G2': { bg:'#fce7f3', border:'#ec4899', text:'#9d174d', label:'Група G2' },
-  'G3': { bg:'#d1fae5', border:'#10b981', text:'#065f46', label:'Група G3' },
-  'G4': { bg:'#fef3c7', border:'#f59e0b', text:'#92400e', label:'Група G4' },
-};
+const GROUP_COLORS_LIST = [
+  { bg:'#dbeafe', border:'#3b82f6', text:'#1d4ed8' },
+  { bg:'#fce7f3', border:'#ec4899', text:'#9d174d' },
+  { bg:'#d1fae5', border:'#10b981', text:'#065f46' },
+  { bg:'#fef3c7', border:'#f59e0b', text:'#92400e' },
+  { bg:'#ede9fe', border:'#7c3aed', text:'#4c1d95' },
+  { bg:'#fee2e2', border:'#ef4444', text:'#991b1b' },
+  { bg:'#ccfbf1', border:'#14b8a6', text:'#134e4a' },
+  { bg:'#ffedd5', border:'#f97316', text:'#7c2d12' },
+  { bg:'#e0f2fe', border:'#0284c7', text:'#0c4a6e' },
+  { bg:'#f0fdf4', border:'#22c55e', text:'#14532d' },
+  { bg:'#fdf4ff', border:'#a855f7', text:'#581c87' },
+  { bg:'#fff1f2', border:'#f43f5e', text:'#881337' },
+];
 
 function getGroupColor(gid) {
-  return GROUP_PALETTE[gid] || { bg:'#f3f4f6', border:'#6b7280', text:'#374151', label: gid };
+  if (!gid) return null;
+  const num = parseInt(gid.replace(/\D/g, ''), 10);
+  if (!isNaN(num) && num >= 1) {
+    const c = GROUP_COLORS_LIST[(num - 1) % GROUP_COLORS_LIST.length];
+    return { ...c, label: gid };
+  }
+  // fallback for non-numeric group ids
+  let hash = 0;
+  for (let i = 0; i < gid.length; i++) hash = (hash * 31 + gid.charCodeAt(i)) & 0xffff;
+  const c = GROUP_COLORS_LIST[hash % GROUP_COLORS_LIST.length];
+  return { ...c, label: gid };
 }
 
 function highlightGroup(gid, on) {
