@@ -20,6 +20,9 @@
     }
     .col-resize-handle:hover,
     .col-resize-handle.active { background: rgba(59,130,246,.5); }
+    #candidates-table th[draggable="true"] { cursor: grab; }
+    #candidates-table th[draggable="true"]:active { cursor: grabbing; }
+    .col-drag-over { background: rgba(59,130,246,.15) !important; outline: 2px dashed rgba(59,130,246,.6); }
     #candidates-table tbody tr { cursor: pointer; }
 
     /* ── Deal Card (full-screen) ── */
@@ -1199,6 +1202,29 @@ const ALL_COLS = [
 const ROLE_LABELS = { head_admin:'Головний адмін', financier:'Фінансист', admin:'Адмін' };
 let currentRole = 'head_admin';
 
+/* ── Column prefs (order + width, persisted to localStorage) ── */
+const COL_PREFS_KEY = 'crm_col_prefs_v1';
+let colPrefs = {}; // { [key]: { width?, order? } }
+
+function loadColPrefs() {
+  try { const r = localStorage.getItem(COL_PREFS_KEY); if (r) colPrefs = JSON.parse(r); } catch(e) { colPrefs = {}; }
+}
+
+function saveColPrefs() {
+  try { localStorage.setItem(COL_PREFS_KEY, JSON.stringify(colPrefs)); } catch(e) {}
+}
+
+function getActiveCols() {
+  const base = ALL_COLS.filter(c => currentRole !== 'admin' || !c.financial);
+  return base
+    .map((c, i) => ({
+      ...c,
+      width:  (colPrefs[c.key] && colPrefs[c.key].width  != null) ? colPrefs[c.key].width  : c.width,
+      _order: (colPrefs[c.key] && colPrefs[c.key].order  != null) ? colPrefs[c.key].order  : i,
+    }))
+    .sort((a, b) => a._order - b._order);
+}
+
 /* ── Column filters ── */
 let columnFilters = {};
 let filteredIndices = [];
@@ -1320,7 +1346,7 @@ function clearAllFilters() {
 /* ── Table ── */
 function renderTable() {
   applyFilters();
-  const cols = ALL_COLS.filter(c => currentRole !== 'admin' || !c.financial);
+  const cols = getActiveCols();
 
   const hasFilters = Object.keys(columnFilters).length > 0;
 
@@ -1334,8 +1360,13 @@ function renderTable() {
        </svg>
      </th>` +
     cols.map(c =>
-      `<th style="width:${c.width}px;min-width:${c.width}px"
-           class="px-3 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap select-none">
+      `<th data-col-key="${c.key}" draggable="true"
+           style="width:${c.width}px;min-width:${c.width}px"
+           class="px-3 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap select-none"
+           ondragstart="colDragStart('${c.key}')"
+           ondragover="colDragOver(event,'${c.key}')"
+           ondrop="colDrop(event,'${c.key}')"
+           ondragend="colDragEnd()">
          ${c.label}<div class="col-resize-handle"></div>
        </th>`
     ).join('') +
@@ -1531,12 +1562,62 @@ function initResizable() {
       startX = e.pageX; startW = th.offsetWidth;
       handle.classList.add('active');
       const onMove = e => { const w = Math.max(50,startW+e.pageX-startX); th.style.width=w+'px'; th.style.minWidth=w+'px'; };
-      const onUp   = () => { handle.classList.remove('active'); document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); };
+      const onUp   = () => {
+        handle.classList.remove('active');
+        document.removeEventListener('mousemove',onMove);
+        document.removeEventListener('mouseup',onUp);
+        const key = th.dataset.colKey;
+        if (key) {
+          if (!colPrefs[key]) colPrefs[key] = {};
+          colPrefs[key].width = th.offsetWidth;
+          saveColPrefs();
+        }
+      };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
       e.preventDefault();
+      e.stopPropagation(); // prevent column drag from starting on resize handle
     });
   });
+}
+
+/* ── Column drag-to-reorder ── */
+let _colDragKey = null;
+
+function colDragStart(key) {
+  _colDragKey = key;
+}
+
+function colDragOver(e, key) {
+  if (!_colDragKey || _colDragKey === key) return;
+  e.preventDefault();
+  document.querySelectorAll('#table-header th').forEach(th => th.classList.remove('col-drag-over'));
+  const th = document.querySelector(`#table-header th[data-col-key="${key}"]`);
+  if (th) th.classList.add('col-drag-over');
+}
+
+function colDrop(e, key) {
+  e.preventDefault();
+  if (!_colDragKey || _colDragKey === key) { _colDragKey = null; return; }
+  const cols = getActiveCols();
+  const srcIdx = cols.findIndex(c => c.key === _colDragKey);
+  const tgtIdx = cols.findIndex(c => c.key === key);
+  if (srcIdx < 0 || tgtIdx < 0) { _colDragKey = null; return; }
+  const reordered = [...cols];
+  const [moved] = reordered.splice(srcIdx, 1);
+  reordered.splice(tgtIdx, 0, moved);
+  reordered.forEach((c, i) => {
+    if (!colPrefs[c.key]) colPrefs[c.key] = {};
+    colPrefs[c.key].order = i;
+  });
+  saveColPrefs();
+  _colDragKey = null;
+  renderTable();
+}
+
+function colDragEnd() {
+  _colDragKey = null;
+  document.querySelectorAll('#table-header th').forEach(th => th.classList.remove('col-drag-over'));
 }
 
 /* ── Deal Card ── */
@@ -3369,6 +3450,7 @@ function initStatusDropdowns() {
 }
 
 /* ── Init ── */
+loadColPrefs();
 loadVacancies();
 initStatusDropdowns();
 
