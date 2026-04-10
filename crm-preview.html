@@ -856,6 +856,7 @@
         <div class="field-row">
           <span class="field-label">Якісна подача</span>
           <select class="field-select" data-key="quality_submission">
+            <option value="">—</option>
             <option value="true">Так</option>
             <option value="false">Ні</option>
           </select>
@@ -1021,7 +1022,7 @@ function dbToRow(r) {
     arrival_date:       r.arrival_date      || null,
     transport:          r.transport         || '',
     status_adm:         r.status_adm        || 'Зареєстровано',
-    quality_submission: !!r.quality_submission,
+    quality_submission: r.quality_submission ?? null,
     payment_amount:     r.payment_amount    ?? null,
     payment_status:     r.payment_status    || 'Не виплачено',
     service_type:       pd.service_type       || '',
@@ -1054,7 +1055,7 @@ function rowToDb(row) {
     arrival_date:      row.arrival_date      || null,
     transport:         row.transport         || null,
     status_adm:        row.status_adm        || 'Зареєстровано',
-    quality_submission:!!row.quality_submission,
+    quality_submission: row.quality_submission ?? null,
     payment_amount:    row.payment_amount    ?? null,
     payment_status:    row.payment_status    || 'Не виплачено',
     comments:          row.comments          || [],
@@ -1247,7 +1248,7 @@ function applyFilters() {
       if (!val || (Array.isArray(val) && !val.length)) return true;
       let cell = row[key];
       if (cell == null) return false;
-      if (key === 'quality_submission') cell = cell ? 'Так' : 'Ні';
+      if (key === 'quality_submission') cell = cell === true ? 'Так' : cell === false ? 'Ні' : '';
       if (Array.isArray(val)) return val.includes(String(cell));
       return String(cell).toLowerCase().includes(val.toLowerCase());
     });
@@ -1658,7 +1659,7 @@ function openDealCard(idx) {
     const k = el.dataset.key;
     let v = row[k];
     if (k === 'quality_submission') {
-      el.value = v ? 'true' : 'false';
+      el.value = v === true ? 'true' : v === false ? 'false' : '';
     } else {
       el.value = (v != null) ? v : '';
     }
@@ -1728,7 +1729,7 @@ function saveDealCard() {
   document.querySelectorAll('#deal-card [data-key]').forEach(el => {
     const k = el.dataset.key;
     if (k === 'quality_submission') {
-      row[k] = el.value === 'true';
+      row[k] = el.value === '' ? null : el.value === 'true';
     } else if (el.type === 'number') {
       row[k] = el.value !== '' ? Number(el.value) : null;
     } else {
@@ -2801,7 +2802,7 @@ async function saveNewCandidate() {
     arrival_date:      arrivalRaw || null,
     transport:         '',
     status_adm:        document.getElementById('modal-status').value || STATUSES[0],
-    quality_submission: qualityVal === 'true',
+    quality_submission: qualityVal === '' ? null : qualityVal === 'true',
     payment_amount:    document.getElementById('am-payment-amount').value ? parseFloat(document.getElementById('am-payment-amount').value) : null,
     payment_status:    'Не виплачено',
     service_type:      '',
@@ -3127,7 +3128,7 @@ function bxMapRow(contact, deal, groupId, userMap, partnerMap, productData, vaca
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
     transport:         transport,
     status_adm:        'Подано на реєстрацію',
-    quality_submission: false,
+    quality_submission: null,
     payment_amount:    null,
     payment_status:    'Не виплачено',
     service_type:      serviceType,
@@ -3287,7 +3288,7 @@ function saveCell(origIdx, key, rawValue) {
   if (!row) return;
   let value = rawValue;
   if (key === 'quality_submission') {
-    value = rawValue === true || rawValue === 'true';
+    value = rawValue === '' || rawValue == null ? null : (rawValue === true || rawValue === 'true');
   } else if (['age','payment_fee','payment_amount'].includes(key)) {
     value = (rawValue === '' || rawValue == null) ? null : Number(rawValue);
   } else {
@@ -3349,6 +3350,7 @@ function renderEditCell(c, row, origIdx) {
     return `<td class="cell-td" onclick="event.stopPropagation()">
       <select class="cell-select"
         onchange="saveCell(${origIdx},'quality_submission',this.value)">
+        <option value=""      ${raw==null  ?'selected':''}>—</option>
         <option value="true"  ${raw===true ?'selected':''}>Так</option>
         <option value="false" ${raw===false?'selected':''}>Ні</option>
       </select></td>`;

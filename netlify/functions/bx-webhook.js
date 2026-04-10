@@ -201,7 +201,7 @@ function buildRow({ contact = {}, deal, groupId, user, partnerMap, vacancyMap, p
     arrival_date:      deal.UF_CRM_1583938977868 ? deal.UF_CRM_1583938977868.split('T')[0] : null,
     transport:         BX_TRANSPORT[String(deal.UF_CRM_1622814641187)] || null,
     status_adm:        'Подано на реєстрацію',
-    quality_submission: false,
+    quality_submission: null,
     payment_amount:    null,
     payment_status:    'Не виплачено',
     comments:          [],
