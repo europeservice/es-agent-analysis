@@ -3304,6 +3304,29 @@ function saveCell(origIdx, key, rawValue) {
   persist(row);
   // Re-render only when visual row style changes
   if (key === 'status_adm') renderTable();
+  else if (key === 'payment_fee' || key === 'payment_amount') updateSummaryFooter();
+}
+
+function updateSummaryFooter() {
+  const footer = document.getElementById('table-footer');
+  if (!footer) return;
+  const cols = getActiveCols();
+  const sumFee    = filteredIndices.reduce((s, i) => s + (parseFloat(MOCK_DATA[i].payment_fee)    || 0), 0);
+  const sumAmount = filteredIndices.reduce((s, i) => s + (parseFloat(MOCK_DATA[i].payment_amount) || 0), 0);
+  const fmtSum = v => v ? v.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '—';
+  const footerCells = cols.map(c => {
+    if (c.key === 'payment_fee')    return `<td class="px-3 py-2 text-right font-semibold text-blue-700 whitespace-nowrap">${fmtSum(sumFee)}</td>`;
+    if (c.key === 'payment_amount') return `<td class="px-3 py-2 text-right font-semibold text-green-700 whitespace-nowrap">${fmtSum(sumAmount)}</td>`;
+    return `<td></td>`;
+  }).join('');
+  footer.innerHTML =
+    `<tr class="border-t-2 border-gray-300 bg-slate-50 text-xs">
+       <td class="px-2 py-2 font-semibold text-gray-500 whitespace-nowrap" colspan="2">
+         Сума (${filteredIndices.length} рядків)
+       </td>
+       ${footerCells}
+       <td></td>
+     </tr>`;
 }
 
 // ── Render one editable table cell ───────────────────────────────────────
