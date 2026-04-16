@@ -6,13 +6,13 @@
 -- Крок 1: Видалити старий constraint
 ALTER TABLE user_roles DROP CONSTRAINT IF EXISTS user_roles_role_check;
 
--- Крок 2: Додати новий constraint з усіма ролями
+-- Крок 2: Перейменувати існуючі записи (до додавання нового constraint)
+UPDATE user_roles SET role = 'director' WHERE role = 'head_admin';
+
+-- Крок 3: Додати новий constraint з усіма ролями
 ALTER TABLE user_roles
   ADD CONSTRAINT user_roles_role_check
   CHECK (role IN ('director', 'financier', 'admin', 'manager'));
-
--- Крок 3: Перейменувати існуючі записи
-UPDATE user_roles SET role = 'director' WHERE role = 'head_admin';
 
 -- Крок 4: Оновити функцію get_user_role (без змін логіки, але для ясності)
 CREATE OR REPLACE FUNCTION get_user_role()
