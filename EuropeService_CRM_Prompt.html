@@ -421,11 +421,15 @@
   <a href="#s12" class="todo">12 — Логістика</a>
   <a href="#s13" class="todo">13 — Служба підтримки</a>
 
+  <div class="sidebar-section">Комунікації</div>
+  <a href="#s19">19 — Телефонія + ШІ аналіз</a>
+  <a href="#s20">20 — Контакт-центр</a>
+  <a href="#s17" class="todo">17 — Discord</a>
+
   <div class="sidebar-section">Технічне</div>
   <a href="#s14">14 — Стек і архітектура</a>
   <a href="#s15">15 — Bitrix інтеграція</a>
   <a href="#s16">16 — Аналітика</a>
-  <a href="#s17" class="todo">17 — Discord інтеграція</a>
   <a href="#s18">18 — Поточний стан розробки</a>
 </nav>
 
@@ -1314,6 +1318,183 @@
 
 Дедлайн: 1 місяць (відмова від Bitrix24)
 Обсяг даних: ~20к лідів/міс, 800-1000 кандидатів/міс
+  </div>
+</div>
+
+<!-- ===== 19 ТЕЛЕФОНІЯ + ШІ АНАЛІЗ ===== -->
+<div class="section" id="s19">
+  <div class="section-header">
+    <span class="section-num">19</span>
+    <h2>Телефонія + ШІ аналіз дзвінків</h2>
+    <span class="badge badge-orange">Етап 2</span>
+  </div>
+
+  <div class="highlight">
+    Інтеграція з <strong>Phonet</strong> (вже використовується). Записи дзвінків підтягуються в картку ліда. ШІ аналізує розмову по чек-листу керівника і дає структурований звіт.
+    Референс: <strong>salesup.tech</strong> — тестували, дуже сильний інструмент. Будемо реалізовувати аналогічну функціональність.
+  </div>
+
+  <p style="margin-top:16px"><strong>19.1 — Phonet інтеграція</strong></p>
+  <table>
+    <tr><th>Функція</th><th>Опис</th><th>Статус</th></tr>
+    <tr><td>Запис дзвінка</td><td>Аудіофайл прикріплюється до картки ліда</td><td><span class="badge badge-orange">Потрібен API доступ</span></td></tr>
+    <tr><td>Транскрипція</td><td>Автоматичне перетворення аудіо в текст</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Метадані дзвінка</td><td>Дата, тривалість, менеджер, тип (вхідний/вихідний)</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Плеєр в CRM</td><td>Прослуховування прямо в картці ліда з таймкодами</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Співвідношення менеджер/клієнт</td><td>% часу говорить менеджер vs клієнт</td><td><span class="badge badge-red">TODO</span></td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>19.2 — ШІ аналіз розмови</strong></p>
+  <p>Кожен керівник завантажує свій чек-лист для філії. ШІ аналізує дзвінок по цьому чек-листу і формує звіт.</p>
+
+  <table>
+    <tr><th>Блок аналізу</th><th>Оцінка</th></tr>
+    <tr><td>Виконання чек-листа</td><td>% (0–100%)</td></tr>
+    <tr><td>Тип дзвінка</td><td>Кваліфікація / Презентація / Дотиснути / Інше</td></tr>
+    <tr><td>Привітання / Відкриття розмови</td><td>Виконано / Частково / Не виконано</td></tr>
+    <tr><td>Виявлення потреби</td><td>Глибоко / Поверхово / Відсутнє</td></tr>
+    <tr><td>Презентація продукту</td><td>Повністю / Частково / Відсутня</td></tr>
+    <tr><td>Робота із запереченнями</td><td>Відмінно / Задовільно / Слабо</td></tr>
+    <tr><td>Закриття угоди</td><td>Чіткий наступний крок / Нечітко / Відсутнє</td></tr>
+    <tr><td>Наступна дія</td><td>Запропоновано чітко / Нечітко / Не запропоновано</td></tr>
+    <tr><td>Якість ліда</td><td>Гарячий / Теплий / Холодний / Неякісний</td></tr>
+    <tr><td>Рівень зацікавленості клієнта</td><td>Високий / Середній / Низький</td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>19.3 — Чек-лист ЦО Київ (приклад):</strong></p>
+  <div class="code-block">
+1. Початок дзвінка
+   - Чи менеджер представився
+   - Чи назвав компанію Європа Сервіс
+   - Чи уточнив ім'я клієнта
+   - Чи запитав чи зручно говорити
+
+2. Підтвердження заявки
+   - Чи сказав що клієнт залишав заявку
+   - Чи назвав вакансію або запит
+   - Чи перевірив актуальність
+   - Якщо вакансія неактивна — чи запропонував альтернативу
+
+3. Контроль діалогу
+   - Чи задав структуру розмови (адженду)
+   - Чи контролював діалог
+   - Чи не пішов за сценарієм клієнта
+
+4. Кваліфікація клієнта (14 питань)
+   Для кого / Де зараз / Вік / Досвід за кордоном /
+   Попередня робота / Бажана робота / Країна-місто /
+   Причина вибору / Документи / Статус 24.02 /
+   Коли виїзд / Мова / Інші агенції / Viber
+
+5. Якість кваліфікації
+6. Презентація компанії (офіційність, гарантії)
+7. Презентація цінності (не тільки ціна, пакет Стандарт)
+8. Підбір вакансій (після кваліфікації, відповідно профілю)
+9. Робота із запереченнями
+10. Закриття (наступний крок, месенджер, контакт)
+  </div>
+
+  <p style="margin-top:12px"><strong>19.4 — Структура в БД:</strong></p>
+  <div class="code-block">
+call_records (дзвінки)
+├── id, lead_id, manager_id
+├── phonet_call_id
+├── direction (inbound/outbound)
+├── duration_sec
+├── talk_ratio_manager (% менеджера)
+├── audio_url
+├── transcript_text
+├── created_at
+
+call_ai_analysis (ШІ аналіз)
+├── id, call_id
+├── checklist_id → ai_checklists
+├── score_overall (%)
+├── call_type
+├── lead_quality (hot/warm/cold/bad)
+├── interest_level
+├── summary
+├── strengths, improvements
+├── next_action
+├── analyzed_at
+
+ai_checklists (чек-листи керівників)
+├── id, branch_id, created_by
+├── name, prompt_text
+├── is_active
+  </div>
+
+  <p style="margin-top:12px"><strong>19.5 — Пріоритет реалізації:</strong></p>
+  <table>
+    <tr><th>Крок</th><th>Що робимо</th><th>Коли</th></tr>
+    <tr><td>1</td><td>Phonet API інтеграція — запис дзвінків в картку ліда</td><td>Етап 2</td></tr>
+    <tr><td>2</td><td>Транскрипція аудіо (Whisper API або аналог)</td><td>Етап 2</td></tr>
+    <tr><td>3</td><td>ШІ аналіз по чек-листу (Claude API)</td><td>Етап 2</td></tr>
+    <tr><td>4</td><td>Дашборд якості дзвінків для керівників</td><td>Етап 3</td></tr>
+  </table>
+</div>
+
+<!-- ===== 20 КОНТАКТ-ЦЕНТР ===== -->
+<div class="section" id="s20">
+  <div class="section-header">
+    <span class="section-num">20</span>
+    <h2>Контакт-центр (омніканальність)</h2>
+    <span class="badge badge-orange">Етап 2</span>
+  </div>
+
+  <div class="highlight">
+    Єдиний інтерфейс для всіх каналів комунікації з клієнтом прямо в CRM.
+    Старт — через <strong>E-chat</strong> (готова інтеграція). З часом — власна інтеграція напряму.
+  </div>
+
+  <p style="margin-top:16px"><strong>20.1 — Канали підключення:</strong></p>
+  <table>
+    <tr><th>Канал</th><th>Тип</th><th>Статус</th></tr>
+    <tr><td>Онлайн чат з сайту</td><td>Widget на сайті</td><td><span class="badge badge-orange">Через E-chat</span></td></tr>
+    <tr><td>Viber бот</td><td>Bot API</td><td><span class="badge badge-orange">Через E-chat</span></td></tr>
+    <tr><td>Telegram бот</td><td>Bot API</td><td><span class="badge badge-orange">Через E-chat</span></td></tr>
+    <tr><td>Особистий Viber менеджера</td><td>Personal number</td><td><span class="badge badge-orange">Через E-chat</span></td></tr>
+    <tr><td>Особистий Telegram менеджера</td><td>Personal number</td><td><span class="badge badge-orange">Через E-chat</span></td></tr>
+    <tr><td>Facebook Messenger</td><td>Page inbox</td><td><span class="badge badge-red">TODO пізніше</span></td></tr>
+    <tr><td>Instagram Direct</td><td>Business API</td><td><span class="badge badge-red">TODO пізніше</span></td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>20.2 — Функціонал контакт-центру:</strong></p>
+  <table>
+    <tr><th>Функція</th><th>Опис</th></tr>
+    <tr><td>Єдина черга повідомлень</td><td>Всі канали в одному інтерфейсі</td></tr>
+    <tr><td>Прив'язка до ліда</td><td>Чат автоматично прив'язується до картки ліда</td></tr>
+    <tr><td>Розподіл по менеджерах</td><td>Призначення чату конкретному менеджеру</td></tr>
+    <tr><td>Контроль керівника</td><td>Керівник бачить всі чати своїх менеджерів</td></tr>
+    <tr><td>Шаблони відповідей</td><td>Швидкі відповіді по часто задаваним питанням</td></tr>
+    <tr><td>Статус чату</td><td>Новий / В роботі / Очікує / Закритий</td></tr>
+    <tr><td>Теги і мітки</td><td>Класифікація звернень</td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>20.3 — Discord (залишається окремо):</strong></p>
+  <table>
+    <tr><th>Використання</th><th>Деталі</th></tr>
+    <tr><td>Внутрішній месенджер</td><td>Спілкування менеджерів з адмінами</td></tr>
+    <tr><td>Сповіщення вакансій</td><td>Актуальні вакансії по каналах</td></tr>
+    <tr><td>Нові заявки</td><td>Сповіщення про надходження лідів</td></tr>
+    <tr><td>Розподіл заявок</td><td>Між філіями та менеджерами</td></tr>
+    <tr><td>Статус</td><td><span class="badge badge-green">Залишаємо як є — не переносимо в CRM</span></td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>20.4 — E-chat інтеграція (перший етап):</strong></p>
+  <div class="code-block">
+Схема:
+Клієнт (Viber/TG/сайт) → E-chat → Webhook → CRM
+
+В CRM:
+- Відображення чату в картці ліда
+- Менеджер відповідає з CRM
+- Відповідь іде через E-chat назад у канал клієнта
+
+Майбутнє (власна інтеграція):
+- Viber Business API напряму
+- Telegram Bot API напряму
+- Без проміжного сервісу
   </div>
 </div>
 
