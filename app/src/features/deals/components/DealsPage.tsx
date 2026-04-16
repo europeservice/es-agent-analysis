@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDeals, type DealsFilter } from '../api/queries'
 import { useCreateDeal } from '../api/mutations'
 import { DealsTable } from './DealsTable'
+import { DealCard } from './DealCard'
 import { DealForm } from './DealForm'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { can } from '@/lib/permissions'
 import { Plus, Search } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { STATUS_OPTIONS } from '../types'
+import type { Deal } from '../types'
 
 const PAGE_SIZE = 50
 
@@ -23,6 +25,7 @@ export function DealsPage() {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
   const [creating, setCreating] = useState(false)
+  const [selected, setSelected] = useState<Deal | null>(null)
 
   const [filters, setFilters] = useState<Omit<DealsFilter, 'search' | 'page' | 'pageSize'>>({})
 
@@ -115,9 +118,16 @@ export function DealsPage() {
           loading={isLoading}
           showFinancial={showFinancial}
           onPageChange={setPage}
-          onRowClick={() => {}}
+          onRowClick={setSelected}
         />
       </div>
+
+      {/* Deal Card */}
+      <DealCard
+        deal={selected}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+      />
 
       {/* Create deal dialog */}
       <Dialog open={creating} onOpenChange={v => { if (!v) setCreating(false) }}>
