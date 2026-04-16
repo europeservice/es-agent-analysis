@@ -419,7 +419,7 @@
   <div class="sidebar-section">Фінанси та HR</div>
   <a href="#s11">11 — Фінанси</a>
   <a href="#s12" class="todo">12 — Логістика</a>
-  <a href="#s13" class="todo">13 — Служба підтримки</a>
+  <a href="#s13">13 — Служба підтримки</a>
 
   <div class="sidebar-section">Комунікації</div>
   <a href="#s19">19 — Телефонія + ШІ аналіз</a>
@@ -1128,23 +1128,102 @@
   </div>
 </div>
 
-<!-- ===== 13 ПІДТРИМКА ===== -->
+<!-- ===== 13 СЛУЖБА ПІДТРИМКИ ===== -->
 <div class="section" id="s13">
   <div class="section-header">
     <span class="section-num">13</span>
     <h2>Служба підтримки</h2>
-    <span class="badge badge-red">TODO</span>
+    <span class="badge badge-green">Заповнено</span>
   </div>
 
-  <div class="todo-block">
-    <div class="todo-label">⚠ TODO — Потрібно зібрати</div>
-    <ul>
-      <li>З чим звертаються клієнти після виїзду?</li>
-      <li>Хто обробляє звернення (Гудзенко Анастасія, Морозова Ольга)?</li>
-      <li>Які типи звернень/скарг?</li>
-      <li>Як фіксуються проблеми зараз?</li>
-    </ul>
+  <div class="highlight">
+    <strong>Мета:</strong> Зменшити ротацію кандидатів з 62% до ~50% відпрацьованих.
+    Зараз компанія заробляє лише на ~30% поданих кандидатів — служба підтримки має збільшити цей показник.
   </div>
+
+  <p style="margin-top:16px"><strong>13.1 — Команда та завдання</strong></p>
+  <table>
+    <tr><th>Співробітник</th><th>Роль</th></tr>
+    <tr><td>Морозова Ольга</td><td>Менеджер служби підтримки</td></tr>
+    <tr><td>Карась Анастасія</td><td>Менеджер служби підтримки</td></tr>
+  </table>
+
+  <p style="margin-top:12px"><strong>Основні функції:</strong></p>
+  <ul>
+    <li>Паралельний контроль з менеджером після реєстрації кандидата</li>
+    <li>Верифікація — кандидат дійсно ознайомлений з вакансією</li>
+    <li>Підтвердження приїзду — щоб уникнути "сюрпризів"</li>
+    <li>Захист від фіктивних записів менеджерами заради продажу</li>
+    <li>Підвищення довіри клієнта до компанії</li>
+    <li>Супровід на всіх ключових етапах подорожі кандидата</li>
+  </ul>
+
+  <p style="margin-top:16px"><strong>13.2 — Воронка служби підтримки (власні статуси)</strong></p>
+  <p>Служба підтримки має <strong>окремий розділ Угод</strong> зі своїми статусами — незалежно від основної воронки адмінів.</p>
+
+  <div class="status-list">
+    <div class="status-item"><span class="status-num">01</span><span class="status-dot dot-blue"></span>Новий — угода зареєстрована, потрібен перший контакт</div>
+    <div class="status-item"><span class="status-num">02</span><span class="status-dot dot-blue"></span>Верифікація — підтвердження знайомства з вакансією</div>
+    <div class="status-item"><span class="status-num">03</span><span class="status-dot dot-teal"></span>Підтверджено виїзд — кандидат підтвердив дату і готовність</div>
+    <div class="status-item"><span class="status-num">04</span><span class="status-dot dot-teal"></span>Нагадування перед виїздом — дзвінок за 1-2 дні</div>
+    <div class="status-item"><span class="status-num">05</span><span class="status-dot dot-teal"></span>Доїхав — підтвердження доїзду і що все ок</div>
+    <div class="status-item"><span class="status-num">06</span><span class="status-dot dot-teal"></span>Приступив — контроль через тиждень після початку роботи</div>
+    <div class="status-item" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2)"><span class="status-num">07</span><span class="status-dot dot-green"></span>✅ Відпрацював — успішно завершив термін</div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">08</span><span class="status-dot dot-red"></span>❌ Відмовився / Не доїхав / Проблема</div>
+  </div>
+
+  <p style="margin-top:16px"><strong>13.3 — Сценарій контактів по етапах</strong></p>
+  <table>
+    <tr><th>Етап</th><th>Тригер</th><th>Дія</th><th>Канал</th></tr>
+    <tr><td>Після реєстрації</td><td>Угода → статус "Зареєстровано Adm"</td><td>Дзвінок — верифікація вакансії і намірів</td><td>Phonet</td></tr>
+    <tr><td>За 2-3 дні до виїзду</td><td>Дата заїзду - 3 дні</td><td>Нагадування, уточнення готовності</td><td>Viber/TG + дзвінок</td></tr>
+    <tr><td>День виїзду</td><td>Дата заїзду</td><td>Побажання вдалої дороги</td><td>Viber/TG (авто)</td></tr>
+    <tr><td>По приїзду</td><td>Статус "Доїхав"</td><td>Чи все ок, як доїхали</td><td>Viber/TG + дзвінок</td></tr>
+    <tr><td>Через тиждень</td><td>Статус "Приступив" + 7 днів</td><td>Як робота, чи все відповідає опису</td><td>Viber/TG</td></tr>
+    <tr><td>По закінченню</td><td>Дата кінця контракту</td><td>Відгук, повторне звернення</td><td>Viber/TG (авто)</td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>13.4 — Інтеграція з E-chat</strong></p>
+  <div class="highlight">
+    Переписка служби підтримки з кандидатом підтягується прямо в картку Угоди.
+    З часом — автоматичні розсилки по тригерах без участі адмінів.
+  </div>
+  <table>
+    <tr><th>Функція</th><th>Опис</th><th>Пріоритет</th></tr>
+    <tr><td>Чат в Угоді</td><td>Viber/TG переписка видна в картці кандидата</td><td><span class="badge badge-orange">Етап 2</span></td></tr>
+    <tr><td>Ручні розсилки</td><td>Служба підтримки надсилає з CRM</td><td><span class="badge badge-orange">Етап 2</span></td></tr>
+    <tr><td>Авторозсилки по тригерах</td><td>Автоматично по даті заїзду, статусу угоди</td><td><span class="badge badge-red">Етап 3</span></td></tr>
+    <tr><td>Шаблони повідомлень</td><td>Готові тексти для кожного етапу</td><td><span class="badge badge-orange">Етап 2</span></td></tr>
+  </table>
+
+  <p style="margin-top:16px"><strong>13.5 — БД структура</strong></p>
+  <div class="code-block">
+support_deals (окрема воронка служби підтримки)
+├── id, deal_id → deals (прив'язка до основної угоди)
+├── assigned_to → users (Морозова / Карась)
+├── status (новий/верифікація/підтверджено/нагадування/
+          доїхав/приступив/відпрацював/проблема)
+├── next_contact_date (коли наступний контакт)
+├── notes
+├── created_at, updated_at
+
+support_contacts (лог контактів)
+├── id, support_deal_id
+├── contact_type (call/viber/telegram/auto)
+├── direction (outbound/inbound)
+├── result (відповів/не відповів/відмовився/підтвердив)
+├── notes
+├── created_at
+  </div>
+
+  <p style="margin-top:12px"><strong>13.6 — Метрики служби підтримки</strong></p>
+  <table>
+    <tr><th>Метрика</th><th>Зараз</th><th>Ціль</th></tr>
+    <tr><td>% відпрацювали від поданих</td><td>~30%</td><td>50%+</td></tr>
+    <tr><td>% ротації (доїхали)</td><td>~62%</td><td>70%+</td></tr>
+    <tr><td>% верифікованих кандидатів</td><td>—</td><td>100%</td></tr>
+    <tr><td>Час першого контакту після реєстрації</td><td>—</td><td>&lt; 24 год</td></tr>
+  </table>
 </div>
 
 <!-- ===== 14 СТЕК ===== -->
