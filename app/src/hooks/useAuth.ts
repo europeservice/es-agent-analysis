@@ -1,13 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import type { UserRole } from '@/types/auth'
+import type { Role } from '@/lib/permissions'
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: User | null
-  role: UserRole | null
+  role: Role | null
   loading: boolean
-  isFinancialVisible: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
 }
@@ -16,23 +15,22 @@ export const AuthContext = createContext<AuthContextValue>({
   user: null,
   role: null,
   loading: true,
-  isFinancialVisible: false,
   signIn: async () => ({ error: null }),
   signOut: async () => {},
 })
 
-async function fetchRole(userId: string): Promise<UserRole | null> {
+async function fetchRole(userId: string): Promise<Role | null> {
   const { data } = await supabase
     .from('user_roles')
     .select('role')
     .eq('user_id', userId)
     .single()
-  return (data?.role as UserRole) ?? null
+  return (data?.role as Role) ?? null
 }
 
 export function useAuthProvider(): AuthContextValue {
   const [user, setUser] = useState<User | null>(null)
-  const [role, setRole] = useState<UserRole | null>(null)
+  const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -71,9 +69,7 @@ export function useAuthProvider(): AuthContextValue {
     setRole(null)
   }
 
-  const isFinancialVisible = role === 'head_admin' || role === 'financier'
-
-  return { user, role, loading, isFinancialVisible, signIn, signOut }
+  return { user, role, loading, signIn, signOut }
 }
 
 export function useAuth() {
