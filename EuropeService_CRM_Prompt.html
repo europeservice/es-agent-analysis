@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EuropeService CRM — Технічне завдання</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222538;
+    --border: #2e3147;
+    --accent: #4f6ef7;
+    --accent2: #00d4aa;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-blue { background: rgba(79,110,247,0.2); color: #818cf8; border: 1px solid rgba(79,110,247,0.3); }
+  .badge-green { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+  .badge-orange { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+  .badge-red { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+  .badge-teal { background: rgba(0,212,170,0.15); color: #2dd4bf; border: 1px solid rgba(0,212,170,0.25); }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .header p {
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  .layout {
+    display: flex;
+    min-height: calc(100vh - 120px);
+  }
+
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 120px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    padding: 8px 20px 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar a:hover {
+    color: var(--text);
+    background: var(--surface2);
+    border-left-color: var(--accent);
+  }
+
+  .sidebar a.todo {
+    color: var(--text3);
+  }
+
+  .sidebar a.todo::after {
+    content: 'TODO';
+    font-family: var(--mono);
+    font-size: 9px;
+    background: rgba(245,158,11,0.2);
+    color: var(--warn);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px 60px;
+    max-width: 900px;
+  }
+
+  .section {
+    margin-bottom: 48px;
+    scroll-margin-top: 140px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 32px;
+  }
+
+  .section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .todo-block {
+    background: rgba(245,158,11,0.05);
+    border: 1px dashed rgba(245,158,11,0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 12px 0;
+  }
+
+  .todo-block .todo-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--warn);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .todo-block ul {
+    list-style: none;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .todo-block ul li {
+    padding: 3px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .todo-block ul li::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: var(--text3);
+    font-size: 10px;
+    top: 5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--surface2);
+    color: var(--text2);
+    font-weight: 500;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    border: 1px solid var(--border);
+  }
+
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .code-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #93c5fd;
+    overflow-x: auto;
+    margin: 12px 0;
+    line-height: 1.8;
+  }
+
+  .status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 12px 0;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .status-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 24px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    min-width: 8px;
+  }
+
+  .dot-blue { background: var(--accent); }
+  .dot-green { background: var(--success); }
+  .dot-red { background: var(--danger); }
+  .dot-orange { background: var(--warn); }
+  .dot-teal { background: var(--accent2); }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .info-card .label {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .info-card .value {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px;
+    font-family: var(--mono);
+  }
+
+  .tag-blue { background: rgba(79,110,247,0.15); color: #818cf8; border: 1px solid rgba(79,110,247,0.2); }
+  .tag-green { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+  .tag-gray { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+
+  .role-matrix {
+    overflow-x: auto;
+  }
+
+  .role-matrix td { text-align: center; font-size: 16px; }
+  .role-matrix td:first-child { text-align: left; font-size: 13px; }
+  .role-matrix th:first-child { text-align: left; }
+
+  p { color: var(--text2); margin: 8px 0; font-size: 13px; }
+
+  ul { margin: 8px 0 8px 20px; color: var(--text2); font-size: 13px; }
+  ul li { margin: 4px 0; }
+
+  .highlight {
+    background: rgba(79,110,247,0.1);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .metric-value {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--accent2);
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="badge badge-blue">v0.8 DRAFT</span>
+    <span class="badge badge-orange">Квітень 2026</span>
+    <span class="badge badge-teal">В розробці</span>
+  </div>
+  <h1>EuropeService CRM — Технічне завдання</h1>
+  <p>Повна специфікація для розробки власної CRM системи замість Bitrix24 + Google Sheets + Trello</p>
+</div>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="sidebar-section">Бізнес</div>
+  <a href="#s1">01 — Компанія</a>
+  <a href="#s2">02 — Структура</a>
+  <a href="#s3">03 — Ролі та доступи</a>
+
+  <div class="sidebar-section">Воронки</div>
+  <a href="#s4">04 — Воронка лідів</a>
+  <a href="#s5">05 — Угоди</a>
+  <a href="#s6">06 — Джерела лідів</a>
+
+  <div class="sidebar-section">Операції</div>
+  <a href="#s7">07 — Кандидати</a>
+  <a href="#s8">08 — Вакансії</a>
+  <a href="#s9">09 — Партнери</a>
+  <a href="#s10">10 — Маркетинг</a>
+
+  <div class="sidebar-section">Фінанси та HR</div>
+  <a href="#s11" class="todo">11 — Фінанси</a>
+  <a href="#s12" class="todo">12 — Логістика</a>
+  <a href="#s13" class="todo">13 — Служба підтримки</a>
+
+  <div class="sidebar-section">Технічне</div>
+  <a href="#s14">14 — Стек і архітектура</a>
+  <a href="#s15">15 — Bitrix інтеграція</a>
+  <a href="#s16">16 — Аналітика</a>
+  <a href="#s17" class="todo">17 — Discord інтеграція</a>
+  <a href="#s18">18 — Поточний стан розробки</a>
+</nav>
+
+<main class="main">
+
+<!-- ===== 01 КОМПАНІЯ ===== -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Компанія</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="label">Назва</div>
+      <div class="value">EuropeService</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Основний бізнес</div>
+      <div class="value">Працевлаштування українців за кордон</div>
+    </div>
+    <div class="info-card">
+      <div class="label">CEO</div>
+      <div class="value">Котов Андрій</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Operations Director</div>
+      <div class="value">Попов Євгеній</div>
+    </div>
+  </div>
+
+  <p><strong>Філії:</strong></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+    <span class="tag tag-blue">Київ (CO)</span>
+    <span class="tag tag-blue">Житомир</span>
+    <span class="tag tag-blue">Одеса</span>
+    <span class="tag tag-blue">Рівне</span>
+  </div>
+
+  <p><strong>Основні країни працевлаштування:</strong></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+    <span class="tag tag-green">Польща</span>
+    <span class="tag tag-green">Чехія</span>
+    <span class="tag tag-green">Греція</span>
+    <span class="tag tag-green">Німеччина</span>
+  </div>
+
+  <p><strong>Поточні інструменти (замінюємо):</strong></p>
+  <table>
+    <tr><th>Інструмент</th><th>Для чого використовується</th><th>Статус</th></tr>
+    <tr><td>Bitrix24</td><td>Ліди + Угоди + Телефонія Phonet</td><td><span class="badge badge-red">Замінюємо</span></td></tr>
+    <tr><td>Google Sheets</td><td>Облік кандидатів (таблиця Працевлаштування)</td><td><span class="badge badge-red">Замінюємо</span></td></tr>
+    <tr><td>Trello</td><td>500+ карток вакансій</td><td><span class="badge badge-red">Замінюємо</span></td></tr>
+    <tr><td>Discord</td><td>Бізнес-месенджер, сповіщення</td><td><span class="badge badge-orange">Залишаємо</span></td></tr>
+    <tr><td>Looker Studio</td><td>Аналітика</td><td><span class="badge badge-orange">Підключимо до нової БД</span></td></tr>
+  </table>
+</div>
+
+<!-- ===== 02 СТРУКТУРА ===== -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Організаційна структура</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <table>
+    <tr><th>Рівень</th><th>Посада</th><th>Ім'я</th></tr>
+    <tr><td>1</td><td>CEO</td><td>Котов Андрій</td></tr>
+    <tr><td>2</td><td>Operations Director</td><td>Попов Євгеній, Михайлик Ігор</td></tr>
+    <tr><td>3</td><td>Deputy Director</td><td>Літвин Ігор</td></tr>
+    <tr><td>4</td><td>Head of Admin</td><td>Михайлик Ігор</td></tr>
+    <tr><td>4</td><td>Head of Finance</td><td>Граценко Марина</td></tr>
+    <tr><td>4</td><td>Head of HR</td><td><em style="color:var(--warn)">Вакансія</em></td></tr>
+    <tr><td>4</td><td>Head of Sales</td><td>—</td></tr>
+    <tr><td>4</td><td>Operations Manager</td><td><em style="color:var(--warn)">Вакансія</em></td></tr>
+    <tr><td>4</td><td>Analyst</td><td><em style="color:var(--warn)">Вакансія</em></td></tr>
+    <tr><td>5</td><td>Supervisor CO</td><td>Тестов Віктор</td></tr>
+    <tr><td>5</td><td>Supervisor Zhytomyr</td><td>—</td></tr>
+    <tr><td>5</td><td>Supervisor Odesa</td><td>Курасов Владислав</td></tr>
+    <tr><td>5</td><td>Supervisor Рівне</td><td>Лисун Анна</td></tr>
+    <tr><td>6</td><td>Team Lead CO</td><td>Чуприна Тетяна</td></tr>
+    <tr><td>6</td><td>Team Lead Zhytomyr</td><td>Трубін Сергій</td></tr>
+    <tr><td>6</td><td>Team Lead Рівне</td><td>Антонюк Олег, Антонюк Юрій, Новоселов Євгеній</td></tr>
+  </table>
+</div>
+
+<!-- ===== 03 РОЛІ ===== -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Ролі та доступи (RBAC)</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <p><strong>Фінансові поля — приховані від Admin та Sales:</strong></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
+    <span class="tag tag-blue">payment_amount</span>
+    <span class="tag tag-blue">payment_status</span>
+    <span class="tag tag-blue">payment_requisites</span>
+    <span class="tag tag-blue">service_type</span>
+    <span class="tag tag-blue">payment_fee</span>
+  </div>
+
+  <div class="role-matrix">
+  <table>
+    <tr>
+      <th>Роль</th>
+      <th>Ліди</th>
+      <th>Угоди</th>
+      <th>Кандидати</th>
+      <th>Фінанси</th>
+      <th>Вакансії</th>
+      <th>Аналітика</th>
+    </tr>
+    <tr><td>CEO / Director</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+    <tr><td>Head of Finance</td><td>—</td><td>👁</td><td>👁</td><td>✅</td><td>—</td><td>👁</td></tr>
+    <tr><td>Head of Sales</td><td>✅</td><td>✅</td><td>👁</td><td>❌</td><td>✅</td><td>Всі філії</td></tr>
+    <tr><td>Supervisor</td><td>Своя філія</td><td>Своя філія</td><td>👁</td><td>❌</td><td>👁</td><td>Своя філія</td></tr>
+    <tr><td>Team Lead</td><td>Своя команда</td><td>Своя команда</td><td>👁</td><td>❌</td><td>👁</td><td>Своя команда</td></tr>
+    <tr><td>Sales менеджер</td><td>Свої</td><td>Свої</td><td>—</td><td>❌</td><td>👁</td><td>—</td></tr>
+    <tr><td>Head of Admin</td><td>—</td><td>👁</td><td>✅</td><td>—</td><td>👁</td><td>—</td></tr>
+    <tr><td>Admin</td><td>—</td><td>👁</td><td>✏️</td><td>❌</td><td>👁</td><td>—</td></tr>
+    <tr><td>Логіст</td><td>—</td><td>👁</td><td>👁</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>Marketing / Analyst</td><td>👁</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:8px;font-size:11px;color:var(--text3)">✅ повний доступ &nbsp;|&nbsp; ✏️ редагування &nbsp;|&nbsp; 👁 перегляд &nbsp;|&nbsp; ❌ заборонено &nbsp;|&nbsp; — не потрібно</p>
+</div>
+
+<!-- ===== 04 ВОРОНКА ЛІДІВ ===== -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Воронка лідів</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <p>Всього <strong>14 статусів</strong></p>
+
+  <div class="status-list">
+    <div class="status-item"><span class="status-num">01</span><span class="status-dot dot-blue"></span>Новий клієнт</div>
+    <div class="status-item"><span class="status-num">02</span><span class="status-dot dot-blue"></span>Взято в роботу</div>
+    <div class="status-item"><span class="status-num">03</span><span class="status-dot dot-orange"></span>Не вийшов на зв'язок</div>
+    <div class="status-item"><span class="status-num">04</span><span class="status-dot dot-blue"></span>Відправлено вакансії <span style="font-size:11px;color:var(--text3);margin-left:auto">⏰ 2 дні</span></div>
+    <div class="status-item"><span class="status-num">05</span><span class="status-dot dot-blue"></span>Дотиснути</div>
+    <div class="status-item"><span class="status-num">06</span><span class="status-dot dot-blue"></span>Зміна голосу</div>
+    <div class="status-item"><span class="status-num">07</span><span class="status-dot dot-teal"></span>Виставлено рахунок <span style="font-size:11px;color:var(--text3);margin-left:auto">⏰ очікування оплати</span></div>
+    <div class="status-item"><span class="status-num">08</span><span class="status-dot dot-teal"></span>Отримано оплату</div>
+    <div class="status-item" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2)"><span class="status-num">11</span><span class="status-dot dot-green"></span><strong>✅ Заключаємо угоду</strong></div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">12</span><span class="status-dot dot-red"></span>❌ Неякісний лід</div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">13</span><span class="status-dot dot-red"></span>❌ Я не можу продати</div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">14</span><span class="status-dot dot-red"></span>❌ Стара база</div>
+  </div>
+
+  <p style="margin-top:16px"><strong>Причини закриття "Я не можу продати" (9):</strong></p>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
+    <span class="tag tag-gray">Своє житло/немає вакансій</span>
+    <span class="tag tag-gray">Країна без вакансій</span>
+    <span class="tag tag-gray">Відмовляється платити</span>
+    <span class="tag tag-gray">Не підходить вакансія</span>
+    <span class="tag tag-gray">Передумав їхати</span>
+    <span class="tag tag-gray">Знайшов роботу</span>
+    <span class="tag tag-gray">Ігнорує у вайбері</span>
+    <span class="tag tag-gray">Неактуально</span>
+    <span class="tag tag-gray">Не погодили тварину/дитину</span>
+  </div>
+
+  <p style="margin-top:12px"><strong>Причини закриття "Неякісний лід" (8):</strong></p>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
+    <span class="tag tag-gray">Вік не підходить (18-60)</span>
+    <span class="tag tag-gray">Документи не підходять</span>
+    <span class="tag tag-gray">Невиїзний з України</span>
+    <span class="tag tag-gray">Стан здоров'я</span>
+    <span class="tag tag-gray">Невірний номер</span>
+    <span class="tag tag-gray">Спам/без номеру</span>
+    <span class="tag tag-gray">Не вийшов на зв'язок</span>
+    <span class="tag tag-gray">Дублікат</span>
+  </div>
+</div>
+
+<!-- ===== 05 УГОДИ ===== -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Воронки угод</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <p><strong>Тип 1: Працевлаштування (15 статусів)</strong></p>
+  <div class="status-list">
+    <div class="status-item"><span class="status-num">01</span><span class="status-dot dot-blue"></span>Внесення даних</div>
+    <div class="status-item"><span class="status-num">02</span><span class="status-dot dot-blue"></span>Подано на реєстрацію</div>
+    <div class="status-item"><span class="status-num">03</span><span class="status-dot dot-teal"></span>Зареєстровано Adm</div>
+    <div class="status-item"><span class="status-num">04</span><span class="status-dot dot-teal"></span>Підтверджено партнером</div>
+    <div class="status-item"><span class="status-num">05</span><span class="status-dot dot-teal"></span>Готовий до виїзду</div>
+    <div class="status-item"><span class="status-num">06</span><span class="status-dot dot-teal"></span>Доїхав</div>
+    <div class="status-item"><span class="status-num">07</span><span class="status-dot dot-teal"></span>Приступив до роботи</div>
+    <div class="status-item" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2)"><span class="status-num">08</span><span class="status-dot dot-green"></span><strong>✅ Відпрацював</strong></div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">09-14</span><span class="status-dot dot-red"></span>❌ Провалена / Відмовився / Не поїхав / Не доїхав / Не приступив / Не відпрацював</div>
+    <div class="status-item" style="background:rgba(245,158,11,0.05);border-color:rgba(245,158,11,0.2)"><span class="status-num">15</span><span class="status-dot dot-orange"></span>🟡 Резерв</div>
+  </div>
+
+  <p style="margin-top:16px"><strong>Тип 2: Резерв (5 статусів)</strong></p>
+  <div class="status-list">
+    <div class="status-item"><span class="status-num">01</span><span class="status-dot dot-blue"></span>Внесення даних</div>
+    <div class="status-item"><span class="status-num">02</span><span class="status-dot dot-blue"></span>В резерві</div>
+    <div class="status-item"><span class="status-num">03</span><span class="status-dot dot-orange"></span>В резерві (без оплати)</div>
+    <div class="status-item" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2)"><span class="status-num">04</span><span class="status-dot dot-green"></span>✅ Працевлаштувати</div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">05</span><span class="status-dot dot-red"></span>❌ Відмовився</div>
+  </div>
+
+  <p style="margin-top:16px"><strong>Тип 3: Підготовка документів / Віза (17 статусів)</strong></p>
+  <div class="status-list">
+    <div class="status-item"><span class="status-num">01</span><span class="status-dot dot-blue"></span>Оплачено передоплату</div>
+    <div class="status-item"><span class="status-num">02-14</span><span class="status-dot dot-teal"></span>Замовити документи → Замовлено → Перезамовлення → Відмова → Готово → Немає адреси → З адресою → Відправлено → Прибуло → Платне зберігання → Відмова НП → Розраховано → Очікування візи</div>
+    <div class="status-item" style="background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.2)"><span class="status-num">15</span><span class="status-dot dot-green"></span>✅ Успішна угода</div>
+    <div class="status-item" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)"><span class="status-num">16-17</span><span class="status-dot dot-red"></span>❌ Угода провалена / Аналіз причини провалу</div>
+  </div>
+</div>
+
+<!-- ===== 06 ДЖЕРЕЛА ЛІДІВ ===== -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Джерела лідів</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <table>
+    <tr><th>Джерело</th><th>Тип</th><th>Примітки</th></tr>
+    <tr><td>Jooble</td><td>Job board</td><td>Основний канал. Автоінтеграція в Bitrix налаштовується</td></tr>
+    <tr><td>Заявка з сайту ORG</td><td>Органіка</td><td>europeservice.org.ua</td></tr>
+    <tr><td>Заявка з сайту PW</td><td>Органіка</td><td>—</td></tr>
+    <tr><td>Заявка з сайту ES</td><td>Органіка</td><td>—</td></tr>
+    <tr><td>Google Ads</td><td>Платна реклама</td><td>UTM: utm_source=google, utm_medium=cpc</td></tr>
+    <tr><td>Facebook Ads</td><td>Платна реклама</td><td>По філіях: ES_Odesa, UA_Rivne, UA_CO тощо</td></tr>
+    <tr><td>TikTok Ads</td><td>Платна реклама</td><td>utm_source=tiktok</td></tr>
+    <tr><td>Viber / Telegram канал</td><td>Месенджер</td><td>utm_source=viber / telegram</td></tr>
+    <tr><td>Facebook групи</td><td>Соцмережі</td><td>Органічні пости у тематичних групах</td></tr>
+    <tr><td>OLX</td><td>Job board</td><td>—</td></tr>
+    <tr><td>Flagma</td><td>Job board</td><td>—</td></tr>
+    <tr><td>Layboard</td><td>Job board</td><td>—</td></tr>
+    <tr><td>Work.ua</td><td>Job board</td><td>Лише ЦО</td></tr>
+    <tr><td>Robota.ua</td><td>Job board</td><td>—</td></tr>
+    <tr><td>По рекомендації</td><td>Сарафан</td><td>Висока конверсія ~32%</td></tr>
+    <tr><td>Повторні звернення</td><td>База</td><td>Конверсія ~67%! Авто-ліди з успішних угод</td></tr>
+    <tr><td>Розсилка по базі</td><td>База</td><td>—</td></tr>
+    <tr><td>Дзвінок менеджера</td><td>Вихідний</td><td>2243 лідів/міс</td></tr>
+  </table>
+</div>
+
+<!-- ===== 07 КАНДИДАТИ ===== -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Картка кандидата</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <table>
+    <tr><th>Блок</th><th>Поля</th></tr>
+    <tr><td>Контактні дані</td><td>Ім'я, прізвище, телефон, Viber/Telegram, іноземний номер, email</td></tr>
+    <tr><td>Паспортні дані</td><td>Ім'я/прізвище EN, тип документа, біометричний, дата народження, серія/номер, термін дії, місце народження</td></tr>
+    <tr><td>Адреса</td><td>Країна, область, місто, вулиця, будинок, квартира, індекс</td></tr>
+    <tr><td>Додатково</td><td>Цивільний стан, PESEL, ім'я батька/матері EN</td></tr>
+    <tr><td>Розміри</td><td>Футболка, штани, взуття, зріст</td></tr>
+    <tr><td>Екстрений контакт</td><td>Ім'я родича, телефон родича</td></tr>
+    <tr><td>Документи</td><td>Фото паспорта, сторінок, дозволів (JPG/PNG/PDF)</td></tr>
+  </table>
+
+  <p style="margin-top:12px"><strong>Інтеграційні поля (приходять з Bitrix):</strong></p>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
+    <span class="tag tag-blue">Філія</span>
+    <span class="tag tag-blue">Відповідальний</span>
+    <span class="tag tag-blue">Вид оплати</span>
+    <span class="tag tag-blue">Дата реєстрації</span>
+    <span class="tag tag-blue">Країна кандидата</span>
+    <span class="tag tag-blue">Країна вакансії</span>
+    <span class="tag tag-blue">Назва проекту</span>
+    <span class="tag tag-blue">Партнер №</span>
+    <span class="tag tag-blue">Дата заїзду</span>
+    <span class="tag tag-blue">Доїзд</span>
+    <span class="tag tag-blue">Якісна подача</span>
+    <span class="tag tag-blue">UTM мітки</span>
+  </div>
+</div>
+
+<!-- ===== 08 ВАКАНСІЇ ===== -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Вакансії (замість Trello)</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <p>500+ карток. Kanban дошка з drag & drop.</p>
+
+  <table>
+    <tr><th>Поле</th><th>Тип</th><th>Примітки</th></tr>
+    <tr><td>Назва / Компанія</td><td>text</td><td>—</td></tr>
+    <tr><td>Місто</td><td>text</td><td>—</td></tr>
+    <tr><td>Велике місто поруч</td><td>text</td><td>—</td></tr>
+    <tr><td>Країна</td><td>select</td><td>Польща, Чехія, Греція...</td></tr>
+    <tr><td>Партнер №</td><td>relation</td><td>→ partners</td></tr>
+    <tr><td>Стать</td><td>select</td><td>чоловіки / жінки / пари</td></tr>
+    <tr><td>Документи</td><td>multiselect</td><td>БІО, паспорт ЄС, параграф, польська віза, карта побиту...</td></tr>
+    <tr><td>Години роботи</td><td>select</td><td>8 / 10 / 12</td></tr>
+    <tr><td>Місячна ЗП</td><td>number</td><td>—</td></tr>
+    <tr><td>Ставка год/нетто</td><td>number</td><td>—</td></tr>
+    <tr><td>Макс вік</td><td>number</td><td>—</td></tr>
+    <tr><td>Житло</td><td>boolean</td><td>—</td></tr>
+    <tr><td>Студент</td><td>boolean</td><td>—</td></tr>
+    <tr><td>Статус</td><td>select</td><td>Активна / Заповнюється / Закрита</td></tr>
+    <tr><td>Заїзди</td><td>array</td><td>дата + кількість місць (ч/ж)</td></tr>
+  </table>
+</div>
+
+<!-- ===== 09 ПАРТНЕРИ ===== -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>Партнери</h2>
+    <span class="badge badge-orange">Частково</span>
+  </div>
+
+  <p>95+ партнерів (роботодавці в ЄС). Нумерація: Партнер №1 — Партнер №95+</p>
+
+  <table>
+    <tr><th>Поле</th><th>Статус</th></tr>
+    <tr><td>Назва / Номер партнера</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>Країна, місто</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>Контактна особа</td><td><span class="badge badge-orange">Потрібно уточнити</span></td></tr>
+    <tr><td>Telegram/Viber чат</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>Умови виплат</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Статистика (ротація, відпрацювали)</td><td><span class="badge badge-green">Є в аналітиці</span></td></tr>
+  </table>
+
+  <div class="todo-block">
+    <div class="todo-label">⚠ TODO — Потрібно зібрати</div>
+    <ul>
+      <li>Умови виплат по кожному партнеру (сума, терміни)</li>
+      <li>Контактні особи</li>
+      <li>Рейтинг надійності партнерів</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 10 МАРКЕТИНГ ===== -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>Маркетинг та аналітика реклами</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value">~1.76%</div>
+      <div class="metric-label">Конверсія лід→угода</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">11 942</div>
+      <div class="metric-label">Лідів/міс (квітень 2026)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">210</div>
+      <div class="metric-label">Угод/міс</div>
+    </div>
+  </div>
+
+  <p><strong>Рекламні канали та структура обліку:</strong></p>
+  <table>
+    <tr><th>Канал</th><th>Філії</th><th>Метрики</th></tr>
+    <tr><td>Facebook Ads</td><td>Одеса, Рівне, ЦО, Київ, Житомир, ТОП</td><td>Бюджет, ліди, конверсія, ціна угоди, +14/30 днів</td></tr>
+    <tr><td>Google Ads</td><td>Загальний + по кампаніях</td><td>Бюджет, UTM кампанії, конверсія</td></tr>
+    <tr><td>TikTok Ads</td><td>Загальний</td><td>Бюджет, ліди, конверсія</td></tr>
+    <tr><td>Jooble</td><td>По філіях</td><td>Бюджет, ліди, конверсія, ціна угоди</td></tr>
+    <tr><td>Work.ua</td><td>ЦО</td><td>Ліди, конверсія</td></tr>
+    <tr><td>OLX / Flagma / Layboard</td><td>—</td><td>Ліди, конверсія</td></tr>
+  </table>
+
+  <p style="margin-top:12px"><strong>Команда маркетингу:</strong></p>
+  <table>
+    <tr><th>Роль</th><th>Ім'я</th></tr>
+    <tr><td>Google таргет</td><td>VWKpartners (підрядник)</td></tr>
+    <tr><td>SMM</td><td>Даменагі Ольга</td></tr>
+    <tr><td>FB таргет</td><td>Вікторія Пасіка</td></tr>
+    <tr><td>Digital marketing</td><td>Кобак Аліна</td></tr>
+    <tr><td>SEO</td><td>Мосій Іна</td></tr>
+    <tr><td>Operations Manager</td><td><em style="color:var(--warn)">Вакансія</em></td></tr>
+    <tr><td>Analyst</td><td><em style="color:var(--warn)">Вакансія</em></td></tr>
+  </table>
+
+  <div class="highlight">
+    Аналітик Кобак Аліна формує щотижневі звіти конверсій по джерелах з Google Sheets. У новій CRM це буде автоматично в реальному часі через Supabase → Looker Studio.
+  </div>
+</div>
+
+<!-- ===== 11 ФІНАНСИ ===== -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2>Фінанси</h2>
+    <span class="badge badge-red">TODO</span>
+  </div>
+
+  <div class="todo-block">
+    <div class="todo-label">⚠ TODO — Потрібно зібрати в окремому чаті</div>
+    <ul>
+      <li>Як розраховується сума виплати партнеру за кандидата?</li>
+      <li>Коли виплачується (після заїзду / після відпрацювання)?</li>
+      <li>Скільки коштує послуга для клієнта по видах?</li>
+      <li>Реквізити для оплати (ФОП Литвин, Курасов, Лисун, сайт, картки...)</li>
+      <li>Як нараховується ЗП менеджерам? Бонусна система?</li>
+      <li>Де зараз ведеться фінансовий облік?</li>
+      <li>Хто має доступ до фінансів?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 12 ЛОГІСТИКА ===== -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2>Логістика</h2>
+    <span class="badge badge-red">TODO</span>
+  </div>
+
+  <div class="todo-block">
+    <div class="todo-label">⚠ TODO — Потрібно зібрати</div>
+    <ul>
+      <li>Як виглядає маршрутний лист?</li>
+      <li>Хто його складає (логіст)?</li>
+      <li>Типи доїзду: самостійно / перевізник партнера / перевізник ES / рейсовий</li>
+      <li>Як організовуються групові поїздки?</li>
+      <li>Що потрібно бачити логісту в CRM?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 13 ПІДТРИМКА ===== -->
+<div class="section" id="s13">
+  <div class="section-header">
+    <span class="section-num">13</span>
+    <h2>Служба підтримки</h2>
+    <span class="badge badge-red">TODO</span>
+  </div>
+
+  <div class="todo-block">
+    <div class="todo-label">⚠ TODO — Потрібно зібрати</div>
+    <ul>
+      <li>З чим звертаються клієнти після виїзду?</li>
+      <li>Хто обробляє звернення (Гудзенко Анастасія, Морозова Ольга)?</li>
+      <li>Які типи звернень/скарг?</li>
+      <li>Як фіксуються проблеми зараз?</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 14 СТЕК ===== -->
+<div class="section" id="s14">
+  <div class="section-header">
+    <span class="section-num">14</span>
+    <h2>Технічна архітектура</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <table>
+    <tr><th>Шар</th><th>Технологія</th><th>Статус</th></tr>
+    <tr><td>Фронтенд</td><td>Vite + React 18 + TypeScript</td><td><span class="badge badge-orange">Міграція з vanilla JS</span></td></tr>
+    <tr><td>Таблиця</td><td>TanStack Table + Virtual</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Kanban</td><td>@dnd-kit</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>State</td><td>Zustand + TanStack Query</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Валідація</td><td>Zod</td><td><span class="badge badge-red">TODO</span></td></tr>
+    <tr><td>Стилі</td><td>Tailwind CSS</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>База даних</td><td>Supabase (PostgreSQL)</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>Auth</td><td>Supabase Auth + RLS</td><td><span class="badge badge-orange">Частково</span></td></tr>
+    <tr><td>Хостинг</td><td>Netlify</td><td><span class="badge badge-green">Задеплоєно</span></td></tr>
+    <tr><td>Репозиторій</td><td>GitHub: claude/crm-development</td><td><span class="badge badge-green">Є</span></td></tr>
+    <tr><td>Сайт</td><td>europeserviceukraine.com.ua</td><td><span class="badge badge-green">Живий</span></td></tr>
+  </table>
+</div>
+
+<!-- ===== 15 BITRIX ===== -->
+<div class="section" id="s15">
+  <div class="section-header">
+    <span class="section-num">15</span>
+    <h2>Bitrix24 інтеграція</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <p><strong>Тригер:</strong> Угода переходить в статус "Подано на реєстрацію"</p>
+  <p><strong>Endpoint:</strong> POST /api/webhooks/bitrix</p>
+
+  <p style="margin-top:12px"><strong>Поля що приходять з Bitrix:</strong></p>
+  <table>
+    <tr><th>З Контакту</th><th>З Угоди</th></tr>
+    <tr>
+      <td>Ім'я, прізвище, телефон, вік, країна кандидата</td>
+      <td>Філія, відповідальний, вид оплати, дата реєстрації, країна вакансії, назва проекту, партнер №, дата заїзду, доїзд, якісна подача, UTM мітки</td>
+    </tr>
+  </table>
+
+  <p style="margin-top:12px"><strong>Логіка обробки:</strong></p>
+  <div class="code-block">
+1. Отримати webhook від Bitrix
+2. Знайти або створити contact за телефоном
+3. Створити deal зі статусом "submitted"
+4. Повернути 200 OK
+5. Надіслати сповіщення в Discord (thread адмінів)
+  </div>
+</div>
+
+<!-- ===== 16 АНАЛІТИКА ===== -->
+<div class="section" id="s16">
+  <div class="section-header">
+    <span class="section-num">16</span>
+    <h2>Аналітика і звітність</h2>
+    <span class="badge badge-green">Заповнено</span>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value">62%</div>
+      <div class="metric-label">% Ротації (доїхали)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">34%</div>
+      <div class="metric-label">% Відпрацювали</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">60%</div>
+      <div class="metric-label">% Доїзду</div>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Дашборд</th><th>Метрики</th></tr>
+    <tr><td>Ліди (з Bitrix)</td><td>Конверсія по джерелах, UTM, менеджери, філії, цикл ліда</td></tr>
+    <tr><td>Угоди/Кандидати</td><td>% ротації, % відпрацювали, % доїзду, перереєстрації</td></tr>
+    <tr><td>Партнери</td><td>Реєстрації, ротація, відпрацювали по кожному партнеру</td></tr>
+    <tr><td>Маркетинг</td><td>Бюджети по каналах/філіях, ціна ліда, ціна угоди, конверсії 14/30 днів</td></tr>
+    <tr><td>Фінанси</td><td>Виплати по місяцях, по філіях, по видах оплати</td></tr>
+  </table>
+</div>
+
+<!-- ===== 17 DISCORD ===== -->
+<div class="section" id="s17">
+  <div class="section-header">
+    <span class="section-num">17</span>
+    <h2>Discord інтеграція</h2>
+    <span class="badge badge-orange">Частково</span>
+  </div>
+
+  <p>Discord використовується як бізнес-месенджер і для сповіщень з реклами.</p>
+
+  <div class="todo-block">
+    <div class="todo-label">⚠ TODO — Потрібно уточнити</div>
+    <ul>
+      <li>Структура каналів Discord (які канали є?)</li>
+      <li>Які сповіщення потрібні при зміні статусу угоди?</li>
+      <li>Як зараз менеджер створює thread з адмінами?</li>
+      <li>Формат повідомлення в Discord при новій угоді</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== 18 ПОТОЧНИЙ СТАН РОЗРОБКИ ===== -->
+<div class="section" id="s18">
+  <div class="section-header">
+    <span class="section-num">18</span>
+    <h2>Поточний стан розробки</h2>
+    <span class="badge badge-blue">Важливо прочитати</span>
+  </div>
+
+  <div class="highlight">
+    CRM вже існує і задеплоєна на <strong>europeserviceukraine.com.ua</strong>.
+    Це не проект з нуля — це доробка існуючої системи.
+    Репозиторій: GitHub, гілка <strong>claude/crm-development</strong>
+  </div>
+
+  <p style="margin-top:16px"><strong>✅ Що вже реалізовано:</strong></p>
+  <table>
+    <tr><th>Функція</th><th>Статус</th><th>Примітки</th></tr>
+    <tr><td>Деплой на Netlify</td><td><span class="badge badge-green">Готово</span></td><td>europeserviceukraine.com.ua</td></tr>
+    <tr><td>Авторизація</td><td><span class="badge badge-green">Готово</span></td><td>Логін/пароль через Supabase Auth</td></tr>
+    <tr><td>Таблиця кандидатів</td><td><span class="badge badge-green">Готово</span></td><td>Фільтри, пошук, сортування</td></tr>
+    <tr><td>Картка угоди</td><td><span class="badge badge-green">Готово</span></td><td>Всі поля + фінансовий блок</td></tr>
+    <tr><td>Картка кандидата</td><td><span class="badge badge-green">Готово</span></td><td>Повна — паспорт, розміри, екстрений контакт, фото</td></tr>
+    <tr><td>Вакансії</td><td><span class="badge badge-green">Готово</span></td><td>Канбан + список режим</td></tr>
+    <tr><td>Календар</td><td><span class="badge badge-green">Готово</span></td><td>—</td></tr>
+    <tr><td>Імпорт з Bitrix24</td><td><span class="badge badge-green">Готово</span></td><td>Кнопка ручного імпорту</td></tr>
+    <tr><td>Ролі (базові)</td><td><span class="badge badge-orange">Частково</span></td><td>head_admin / financier / admin</td></tr>
+    <tr><td>Приховані фін. колонки</td><td><span class="badge badge-green">Готово</span></td><td>payment_amount, payment_status — приховані від admin</td></tr>
+    <tr><td>Експорт Excel</td><td><span class="badge badge-green">Готово</span></td><td>—</td></tr>
+    <tr><td>Google Sheets MCP</td><td><span class="badge badge-green">Готово</span></td><td>Підключено на обох Mac</td></tr>
+  </table>
+
+  <p style="margin-top:20px"><strong>⬜ Що потрібно доробити:</strong></p>
+  <table>
+    <tr><th>Задача</th><th>Пріоритет</th><th>Опис</th></tr>
+    <tr><td>Міграція на React + TypeScript</td><td><span class="badge badge-red">Критично</span></td><td>Зараз vanilla JS ~4000 рядків. Потрібен Vite + React + TanStack</td></tr>
+    <tr><td>RBAC повна матриця</td><td><span class="badge badge-red">Критично</span></td><td>7+ ролей з різними рівнями доступу по філіях</td></tr>
+    <tr><td>RLS в Supabase</td><td><span class="badge badge-red">Критично</span></td><td>Захист даних на рівні БД</td></tr>
+    <tr><td>Bitrix webhook автоматичний</td><td><span class="badge badge-red">Критично</span></td><td>Зараз ручний імпорт. Потрібен автотригер при зміні статусу угоди</td></tr>
+    <tr><td>Воронка лідів</td><td><span class="badge badge-orange">Важливо</span></td><td>Канбан по стадіях ліда з причинами закриття</td></tr>
+    <tr><td>Kanban вакансій drag & drop</td><td><span class="badge badge-orange">Важливо</span></td><td>@dnd-kit між колонками</td></tr>
+    <tr><td>Аналітика / дашборд</td><td><span class="badge badge-orange">Важливо</span></td><td>Конверсії, метрики по філіях і партнерах</td></tr>
+    <tr><td>Discord інтеграція</td><td><span class="badge badge-orange">Важливо</span></td><td>Автоматичні thread при новій угоді</td></tr>
+    <tr><td>Фінансовий модуль</td><td><span class="badge badge-blue">Потім</span></td><td>Після збору вимог</td></tr>
+    <tr><td>Логістика / маршрутні листи</td><td><span class="badge badge-blue">Потім</span></td><td>Після збору вимог</td></tr>
+    <tr><td>Служба підтримки</td><td><span class="badge badge-blue">Потім</span></td><td>Після збору вимог</td></tr>
+  </table>
+
+  <p style="margin-top:20px"><strong>🗓 Контекст для розробника:</strong></p>
+  <div class="code-block">
+Поточний файл: crm-preview.html (~4000 рядків vanilla JS)
+Стек поточний: React + Supabase + Netlify (частково vanilla JS)
+Цільовий стек: Vite + React 18 + TypeScript + TanStack Query
+               + TanStack Table + Virtual + @dnd-kit + Zustand + Zod
+
+Стратегія міграції:
+1. Ініціалізувати /app з новим стеком
+2. Старий HTML заморожується (не видаляється)
+3. Мігрувати фіча за фічею паралельно
+4. Деплой нового на beta.europeserviceukraine.com.ua
+5. Після паритету — переключити DNS
+
+Дедлайн: 1 місяць (відмова від Bitrix24)
+Обсяг даних: ~20к лідів/міс, 800-1000 кандидатів/міс
+  </div>
+</div>
+
+</main>
+</div>
+
+</body>
+</html>
